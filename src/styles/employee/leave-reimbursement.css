@@ -1,0 +1,369 @@
+/* Leave & Reimbursement Component Styles */
+* {
+    font-family: 'Poppins', sans-serif;
+}
+.neo-box {
+    border-radius: 24px;
+    background: #e0e5ec;
+    box-shadow: 20px 20px 60px #bec3c9,
+               -20px -20px 60px #ffffff;
+    transition: all 0.3s ease;
+}
+.neo-box:hover {
+    box-shadow: 25px 25px 75px #bec3c9,
+               -25px -25px 75px #ffffff;
+    transform: translateY(-2px);
+}
+.neo-button {
+    border-radius: 16px;
+    background: #e0e5ec;
+    box-shadow: 5px 5px 10px #bec3c9,
+               -5px -5px 10px #ffffff;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+.neo-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 7px 7px 15px #bec3c9,
+               -7px -7px 15px #ffffff;
+}
+.neo-button:active {
+    transform: translateY(0);
+    box-shadow: inset 5px 5px 10px #bec3c9,
+               inset -5px -5px 10px #ffffff;
+}
+.neo-button.primary {
+    background: #2563eb;
+    color: white;
+    box-shadow: 5px 5px 10px #1d4ed8,
+               -5px -5px 10px #3b82f6;
+}
+.neo-button.primary:hover {
+    background: #1d4ed8;
+}
+.neo-input {
+    border-radius: 16px;
+    background: #e0e5ec;
+    box-shadow: inset 5px 5px 10px #bec3c9,
+               inset -5px -5px 10px #ffffff;
+    transition: all 0.3s ease;
+    outline: none;
+    border: none;
+    padding: 0.75rem 1rem;
+    width: 100%;
+}
+.neo-input:focus {
+    box-shadow: inset 7px 7px 15px #bec3c9,
+               inset -7px -7px 15px #ffffff;
+}
+.neo-select {
+    border-radius: 16px;
+    background: #e0e5ec;
+    box-shadow: inset 5px 5px 10px #bec3c9,
+               inset -5px -5px 10px #ffffff;
+    transition: all 0.3s ease;
+    outline: none;
+    border: none;
+    padding: 0.75rem 1rem;
+    width: 100%;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%234b5563' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1rem;
+}
+.neo-select:focus {
+    box-shadow: inset 7px 7px 15px #bec3c9,
+               inset -7px -7px 15px #ffffff;
+}
+.neo-textarea {
+    border-radius: 16px;
+    background: #e0e5ec;
+    box-shadow: inset 5px 5px 10px #bec3c9,
+               inset -5px -5px 10px #ffffff;
+    transition: all 0.3s ease;
+    outline: none;
+    border: none;
+    padding: 0.75rem 1rem;
+    width: 100%;
+    min-height: 120px;
+    resize: vertical;
+}
+.neo-textarea:focus {
+    box-shadow: inset 7px 7px 15px #bec3c9,
+               inset -7px -7px 15px #ffffff;
+}
+.request-card {
+    border-radius: 20px;
+    padding: 20px;
+    background: #e0e5ec;
+    box-shadow: 5px 5px 10px #bec3c9,
+               -5px -5px 10px #ffffff;
+    transition: all 0.3s ease;
+    margin-bottom: 16px;
+}
+.request-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 7px 7px 15px #bec3c9,
+               -7px -7px 15px #ffffff;
+}
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+.status-badge.approved {
+    background-color: #d1fae5;
+    color: #065f46;
+}
+.status-badge.pending {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+.status-badge.rejected {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+.tab-button {
+    border-radius: 12px;
+    padding: 0.75rem 1.5rem;
+    background: #e0e5ec;
+    box-shadow: 5px 5px 10px #bec3c9,
+               -5px -5px 10px #ffffff;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    font-weight: 500;
+}
+.tab-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 7px 7px 15px #bec3c9,
+               -7px -7px 15px #ffffff;
+}
+.tab-button.active {
+    background: #2563eb;
+    color: white;
+    box-shadow: 5px 5px 10px #1d4ed8,
+               -5px -5px 10px #3b82f6;
+}
+
+/* Task item in widgets */
+.task-item {
+    border-radius: 16px;
+    padding: 16px;
+    background: #e0e5ec;
+    box-shadow: 5px 5px 10px #bec3c9,
+               -5px -5px 10px #ffffff;
+    transition: all 0.3s ease;
+    margin-bottom: 12px;
+}
+.task-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 7px 7px 15px #bec3c9,
+               -7px -7px 15px #ffffff;
+}
+.task-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+/* Main content layout */
+.main-content {
+    margin-left: 16rem; /* From sidebar width */
+    padding: 2rem;
+    transition: all 0.3s ease;
+}
+
+/* File preview styles */
+.file-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+.file-preview-item {
+    padding: 1rem;
+    border-radius: 12px;
+    background: #e0e5ec;
+    box-shadow: 5px 5px 10px #bec3c9,
+               -5px -5px 10px #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+.file-preview-image {
+    width: 4rem;
+    height: 4rem;
+    object-fit: cover;
+    border-radius: 8px;
+}
+.file-preview-info {
+    flex: 1;
+}
+.file-preview-name {
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.25rem;
+}
+.file-preview-size {
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+/* Responsive styles */
+@media (max-width: 1024px) {
+    .main-content {
+        margin-left: 0;
+        padding: 1rem;
+    }
+
+    .neo-box {
+        padding: 1rem !important;
+    }
+
+    .grid-cols-3 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        transform: translateX(-100%);
+    }
+    
+    .sidebar.show {
+        transform: translateX(0);
+    }
+    
+    .main-content {
+        margin-left: 0;
+    }
+
+    .grid-cols-2, .grid-cols-3 {
+        grid-template-columns: 1fr;
+    }
+
+    .request-card {
+        padding: 1rem;
+    }
+
+    .neo-input, .neo-select, .neo-textarea {
+        padding: 0.75rem;
+    }
+}
+
+@media (max-width: 640px) {
+    .neo-box {
+        border-radius: 16px;
+        padding: 12px !important;
+    }
+    
+    h1 {
+        font-size: 1.5rem;
+    }
+    
+    h2 {
+        font-size: 1.25rem;
+    }
+    
+    .text-3xl {
+        font-size: 1.5rem;
+    }
+    
+    .text-2xl {
+        font-size: 1.25rem;
+    }
+    
+    .text-xl {
+        font-size: 1.125rem;
+    }
+
+    .tab-button {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+    }
+    
+    .request-card {
+        padding: 0.75rem !important;
+    }
+    
+    .neo-input, .neo-select, .neo-textarea {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+    }
+    
+    .flex.justify-between.items-center {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 0.75rem;
+    }
+    
+    .neo-button {
+        width: 100%;
+        justify-content: center;
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+    }
+    
+    .neo-box.p-8 {
+        padding: 1rem !important;
+    }
+    
+    .grid.gap-6 {
+        gap: 0.75rem;
+    }
+    
+    .neo-box.p-6 {
+        padding: 0.75rem !important;
+    }
+    
+    .space-y-6 {
+        margin-top: 0.75rem;
+    }
+    
+    /* Fix tabs display */
+    .flex.flex-wrap.gap-4.mb-8 {
+        flex-direction: row;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1rem;
+        justify-content: flex-start;
+        gap: 0.5rem;
+    }
+}
+
+/* Fix back button on small screens */
+@media (max-width: 480px) {
+    .flex.justify-between.items-center > a {
+        width: 100%;
+        margin-top: 0.5rem;
+    }
+    
+    .flex.flex-wrap.gap-4.mb-8 {
+        flex-wrap: wrap;
+    }
+    
+    .tab-button {
+        width: 100%;
+    }
+    
+    /* Stack the status badges and amount on mobile */
+    .request-card .flex.justify-between.items-center {
+        width: 100%;
+    }
+    
+    .request-card .flex.items-center.gap-4 {
+        flex-direction: column;
+        align-items: flex-start;
+        width: 100%;
+    }
+} 

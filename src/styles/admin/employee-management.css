@@ -1,0 +1,87 @@
+/* Employee Management Styles */
+
+.employee-management {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Search and Filters */
+.search-filters-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background-color: var(--background-secondary);
+  border-radius: 0.5rem;
+}
+
+.search-box {
+  flex: 1;
+  min-width: 200px;
+}
+
+.filter-group {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* Employee Table */
+.employee-table-container {
+  overflow-x: auto;
+  background-color: var(--background-secondary);
+  border-radius: 0.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.employee-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.employee-table th,
+.employee-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+}
+
+.employee-table thead tr {
+  background-color: var(--background-accent);
+}
+
+.employee-table tbody tr:hover {
+  background-color: var(--background-hover);
+}
+
+/* Employee Modal */
+.employee-modal {
+  max-width: 600px;
+  width: 100%;
+}
+
+.employee-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+} 

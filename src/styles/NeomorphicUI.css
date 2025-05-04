@@ -1,0 +1,481 @@
+/* Neomorphic UI Styles */
+.neo-box {
+    border-radius: 24px;
+    background: #e0e5ec;
+    box-shadow: 20px 20px 60px #bec3c9,
+               -20px -20px 60px #ffffff;
+    transition: all 0.3s ease;
+}
+
+.neo-box:hover {
+    box-shadow: 25px 25px 75px #bec3c9,
+               -25px -25px 75px #ffffff;
+    transform: translateY(-2px);
+}
+
+.neo-button {
+    border-radius: 16px;
+    background: #e0e5ec;
+    box-shadow: 5px 5px 10px #bec3c9,
+               -5px -5px 10px #ffffff;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.neo-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 7px 7px 15px #bec3c9,
+               -7px -7px 15px #ffffff;
+}
+
+.neo-button:active {
+    transform: translateY(0);
+    box-shadow: inset 5px 5px 10px #bec3c9,
+               inset -5px -5px 10px #ffffff;
+}
+
+.neo-button.primary {
+    background: #2563eb;
+    color: white;
+    box-shadow: 5px 5px 10px #1d4ed8,
+               -5px -5px 10px #3b82f6;
+}
+
+.neo-button.primary:hover {
+    background: #1d4ed8;
+}
+
+.neo-input {
+    border-radius: 16px;
+    background: #e0e5ec;
+    box-shadow: inset 5px 5px 10px #bec3c9,
+               inset -5px -5px 10px #ffffff;
+    transition: all 0.3s ease;
+    outline: none;
+    border: none;
+    padding: 0.75rem 1rem;
+    width: 100%;
+}
+
+.neo-input:focus {
+    box-shadow: inset 7px 7px 15px #bec3c9,
+               inset -7px -7px 15px #ffffff;
+}
+
+.neo-select {
+    border-radius: 16px;
+    background: #e0e5ec;
+    box-shadow: inset 5px 5px 10px #bec3c9,
+               inset -5px -5px 10px #ffffff;
+    transition: all 0.3s ease;
+    outline: none;
+    border: none;
+    padding: 0.75rem 1rem;
+    width: 100%;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%234b5563' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1rem;
+}
+
+.neo-select:focus {
+    box-shadow: inset 7px 7px 15px #bec3c9,
+               inset -7px -7px 15px #ffffff;
+}
+
+.neo-textarea {
+    border-radius: 16px;
+    background: #e0e5ec;
+    box-shadow: inset 5px 5px 10px #bec3c9,
+               inset -5px -5px 10px #ffffff;
+    transition: all 0.3s ease;
+    outline: none;
+    border: none;
+    padding: 0.75rem 1rem;
+    width: 100%;
+    min-height: 120px;
+    resize: vertical;
+}
+
+.neo-textarea:focus {
+    box-shadow: inset 7px 7px 15px #bec3c9,
+               inset -7px -7px 15px #ffffff;
+}
+
+.metric-card {
+    border-radius: 20px;
+    padding: 20px;
+    background: #e0e5ec;
+    box-shadow: 5px 5px 10px #bec3c9,
+               -5px -5px 10px #ffffff;
+    transition: all 0.3s ease;
+}
+
+.metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 7px 7px 15px #bec3c9,
+               -7px -7px 15px #ffffff;
+}
+
+.chart-height-400 {
+    height: 400px;
+}
+
+.chart-height-280 {
+    height: 280px;
+}
+
+.quick-access-card {
+    border-radius: 16px;
+    padding: 1.5rem;
+    background: #e0e5ec;
+    box-shadow: 5px 5px 10px #bec3c9,
+               -5px -5px 10px #ffffff;
+    transition: all 0.3s ease;
+    display: block;
+}
+
+.quick-access-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 7px 7px 15px #bec3c9,
+               -7px -7px 15px #ffffff;
+}
+
+.chart-container {
+    position: relative;
+    height: 100%;
+    width: 100%;
+}
+
+canvas {
+    max-height: 100%;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* Responsive Styles */
+@media (max-width: 1024px) {
+    .main-content {
+        margin-left: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .neo-box {
+        padding: 1rem;
+    }
+    .chart-height-400 {
+        height: 300px;
+    }
+    .chart-height-280 {
+        height: 220px;
+    }
+}
+
+@media (max-width: 640px) {
+    .chart-height-400 {
+        height: 250px;
+    }
+    .chart-height-280 {
+        height: 180px;
+    }
+}
+
+/* Animation classes */
+.fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+body {
+    background: #e0e5ec;
+    min-height: 100vh;
+}
+
+.main-content {
+    margin-left: 16rem;
+    transition: all 0.3s ease;
+}
+
+/* Request Card Styles */
+.request-card {
+    border-radius: 20px;
+    padding: 20px;
+    background: #e0e5ec;
+    box-shadow: 5px 5px 10px #bec3c9,
+               -5px -5px 10px #ffffff;
+    transition: all 0.3s ease;
+    margin-bottom: 16px;
+}
+
+.request-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 7px 7px 15px #bec3c9,
+               -7px -7px 15px #ffffff;
+}
+
+/* Status Badge Styles */
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.status-badge.approved {
+    background-color: #d1fae5;
+    color: #065f46;
+}
+
+.status-badge.pending {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.status-badge.rejected {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+/* Tab Button Styles */
+.tab-button {
+    border-radius: 12px;
+    padding: 0.75rem 1.5rem;
+    background: #e0e5ec;
+    box-shadow: 5px 5px 10px #bec3c9,
+               -5px -5px 10px #ffffff;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.tab-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 7px 7px 15px #bec3c9,
+               -7px -7px 15px #ffffff;
+}
+
+.tab-button.active {
+    background: #2563eb;
+    color: white;
+    box-shadow: 5px 5px 10px #1d4ed8,
+               -5px -5px 10px #3b82f6;
+}
+
+/* Wellbeing Page Styles */
+.person-card {
+    border-radius: 16px;
+    background: #e0e5ec;
+    box-shadow: 5px 5px 10px #a3b1c6, -5px -5px 10px #ffffff;
+    transition: all 0.3s ease;
+    padding: 1.5rem;
+}
+
+.person-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 7px 7px 15px #a3b1c6, -7px -7px 15px #ffffff;
+}
+
+.metric-value {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.metric-label {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.status-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 8px;
+}
+
+.status-good {
+    background-color: #10B981;
+}
+
+.status-warning {
+    background-color: #F59E0B;
+}
+
+.status-critical {
+    background-color: #EF4444;
+}
+
+.shadow-neomorphic {
+    box-shadow: 8px 8px 16px rgba(174, 174, 192, 0.4), 
+                -8px -8px 16px rgba(255, 255, 255, 0.8);
+}
+
+.shadow-neomorphic-hover:hover {
+    box-shadow: 12px 12px 20px rgba(174, 174, 192, 0.5), 
+                -12px -12px 20px rgba(255, 255, 255, 0.9);
+    transform: translateY(-2px);
+}
+
+.shadow-neomorphic-inner {
+    box-shadow: inset 4px 4px 8px rgba(174, 174, 192, 0.3), 
+                inset -4px -4px 8px rgba(255, 255, 255, 0.8);
+}
+
+.shadow-neomorphic-sm {
+    box-shadow: 4px 4px 8px rgba(174, 174, 192, 0.2), 
+                -4px -4px 8px rgba(255, 255, 255, 0.7);
+}
+
+.shadow-neomorphic-button {
+    background: linear-gradient(145deg, #f0f0f0, #e6e6e6);
+    box-shadow: 4px 4px 8px rgba(174, 174, 192, 0.2),
+                -4px -4px 8px rgba(255, 255, 255, 0.7);
+    transition: all 0.2s ease;
+}
+
+.shadow-neomorphic-button:hover {
+    box-shadow: 6px 6px 10px rgba(174, 174, 192, 0.25),
+                -6px -6px 10px rgba(255, 255, 255, 0.8);
+}
+
+.shadow-neomorphic-button:active {
+    box-shadow: inset 4px 4px 8px rgba(174, 174, 192, 0.3),
+                inset -4px -4px 8px rgba(255, 255, 255, 0.8);
+}
+
+/* Status Colors */
+.status-color-todo {
+    border-top: 3px solid #3b82f6;
+}
+
+.status-color-inProgress {
+    border-top: 3px solid #f59e0b;
+}
+
+.status-color-completed {
+    border-top: 3px solid #10b981;
+}
+
+.status-color-blocked {
+    border-top: 3px solid #ef4444;
+}
+
+/* Task Card Effects */
+.task-card {
+    transition: all 0.2s ease;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.task-card:hover {
+    transform: translateY(-2px);
+}
+
+/* Custom Progress Bar */
+.progress-bar-container {
+    height: 6px;
+    background-color: #e5e7eb;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    transition: width 0.3s ease-in-out;
+}
+
+/* Date Picker Styling */
+.flatpickr-calendar {
+    box-shadow: 8px 8px 16px rgba(174, 174, 192, 0.4), 
+                -8px -8px 16px rgba(255, 255, 255, 0.8) !important;
+    border: none !important;
+    border-radius: 12px !important;
+}
+
+.flatpickr-day.selected, 
+.flatpickr-day.startRange, 
+.flatpickr-day.endRange, 
+.flatpickr-day.selected.inRange, 
+.flatpickr-day.startRange.inRange, 
+.flatpickr-day.endRange.inRange, 
+.flatpickr-day.selected:focus, 
+.flatpickr-day.startRange:focus, 
+.flatpickr-day.endRange:focus, 
+.flatpickr-day.selected:hover, 
+.flatpickr-day.startRange:hover, 
+.flatpickr-day.endRange:hover, 
+.flatpickr-day.selected.prevMonthDay, 
+.flatpickr-day.startRange.prevMonthDay, 
+.flatpickr-day.endRange.prevMonthDay, 
+.flatpickr-day.selected.nextMonthDay, 
+.flatpickr-day.startRange.nextMonthDay, 
+.flatpickr-day.endRange.nextMonthDay {
+    background: #6366f1 !important;
+    border-color: #6366f1 !important;
+}
+
+/* Custom Tag Pills */
+.tag-pill {
+    border-radius: 999px;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+}
+
+/* Animation for Task Updates */
+@keyframes highlight {
+    0% {
+        background-color: rgba(99, 102, 241, 0.1);
+    }
+    100% {
+        background-color: transparent;
+    }
+}
+
+.highlight-animation {
+    animation: highlight 2s ease-in-out;
+}
+
+/* Drag and drop styles */
+.dragging {
+    opacity: 0.5;
+    transform: scale(1.02);
+}
+
+.drop-target-hover {
+    background-color: rgba(99, 102, 241, 0.05);
+} 

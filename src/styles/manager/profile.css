@@ -1,0 +1,429 @@
+/* Manager Profile Styles */
+
+.skill-badge {
+    border-radius: 20px;
+    padding: 10px 24px;
+    margin: 5px;
+    font-size: 0.95em;
+    background: #e0e5ec;
+    box-shadow: 3px 3px 6px #bec3c9, -3px -3px 6px #ffffff;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+}
+
+.skill-badge:hover {
+    transform: translateY(-2px);
+    box-shadow: 5px 5px 10px #bec3c9, -5px -5px 10px #ffffff;
+}
+
+.skill-badge .tooltip {
+    visibility: hidden;
+    width: 250px;
+    background-color: #e0e5ec;
+    color: #1f2937;
+    text-align: center;
+    border-radius: 16px;
+    padding: 12px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: all 0.3s ease;
+    box-shadow: 5px 5px 15px #bec3c9, -5px -5px 15px #ffffff;
+}
+
+.skill-badge:hover .tooltip {
+    visibility: visible;
+    opacity: 1;
+    transform: translateX(-50%) translateY(-5px);
+}
+
+.timeline-filter {
+    border-radius: 16px;
+    padding: 8px 20px;
+    margin: 5px;
+    font-size: 0.95em;
+    background: #e0e5ec;
+    box-shadow: 3px 3px 6px #bec3c9, -3px -3px 6px #ffffff;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.timeline-filter.active {
+    background: #2563eb;
+    color: white;
+    box-shadow: inset 3px 3px 6px #1d4ed8, inset -3px -3px 6px #3b82f6;
+}
+
+.mfa-step {
+    border-radius: 20px;
+    padding: 20px;
+    margin: 12px 0;
+    background: #e0e5ec;
+    box-shadow: 5px 5px 10px #bec3c9, -5px -5px 10px #ffffff;
+    transition: all 0.3s ease;
+}
+
+.mfa-step.active {
+    background: #2563eb;
+    color: white;
+    box-shadow: 5px 5px 10px #1d4ed8, -5px -5px 10px #3b82f6;
+}
+
+.mfa-step.completed {
+    background: #10B981;
+    color: white;
+    box-shadow: 5px 5px 10px #059669, -5px -5px 10px #34D399;
+}
+
+.login-history-row {
+    border-radius: 16px;
+    padding: 16px;
+    margin: 8px 0;
+    background: #e0e5ec;
+    box-shadow: 3px 3px 6px #bec3c9, -3px -3px 6px #ffffff;
+    transition: all 0.3s ease;
+}
+
+.login-history-row:hover {
+    transform: translateX(5px);
+    box-shadow: 5px 5px 10px #bec3c9, -5px -5px 10px #ffffff;
+}
+
+.security-toggle {
+    position: relative;
+    display: inline-block;
+    width: 64px;
+    height: 36px;
+}
+
+.security-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.security-toggle .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #e0e5ec;
+    transition: .4s;
+    border-radius: 36px;
+    box-shadow: inset 3px 3px 6px #bec3c9, inset -3px -3px 6px #ffffff;
+}
+
+.security-toggle .slider:before {
+    position: absolute;
+    content: "";
+    height: 28px;
+    width: 28px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+.security-toggle input:checked + .slider {
+    background-color: #2563eb;
+    box-shadow: inset 3px 3px 6px #1d4ed8, inset -3px -3px 6px #3b82f6;
+}
+
+.security-toggle input:checked + .slider:before {
+    transform: translateX(28px);
+}
+
+.profile-avatar {
+    position: relative;
+    width: 120px;
+    height: 120px;
+}
+
+.profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    box-shadow: 5px 5px 10px #bec3c9, -5px -5px 10px #ffffff;
+}
+
+.profile-avatar .status-dot {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 3px solid #e0e5ec;
+    box-shadow: 2px 2px 4px #bec3c9, -2px -2px 4px #ffffff;
+}
+
+.profile-avatar .camera-button {
+    position: absolute;
+    bottom: -8px;
+    right: -8px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #2563eb;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 3px 3px 6px #1d4ed8, -3px -3px 6px #3b82f6;
+    transition: all 0.3s ease;
+}
+
+.profile-avatar .camera-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 4px 4px 8px #1d4ed8, -4px -4px 8px #3b82f6;
+}
+
+.contact-info-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 16px;
+    background: #e0e5ec;
+    box-shadow: 3px 3px 6px #bec3c9, -3px -3px 6px #ffffff;
+    transition: all 0.3s ease;
+}
+
+.contact-info-item:hover {
+    transform: translateX(5px);
+    box-shadow: 5px 5px 10px #bec3c9, -5px -5px 10px #ffffff;
+}
+
+.contact-info-item i {
+    font-size: 1.5rem;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    background: #e0e5ec;
+    box-shadow: inset 3px 3px 6px #bec3c9, inset -3px -3px 6px #ffffff;
+}
+
+.timeline-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px;
+    border-radius: 16px;
+    background: #e0e5ec;
+    box-shadow: 3px 3px 6px #bec3c9, -3px -3px 6px #ffffff;
+    transition: all 0.3s ease;
+}
+
+.timeline-item:hover {
+    transform: translateX(5px);
+    box-shadow: 5px 5px 10px #bec3c9, -5px -5px 10px #ffffff;
+}
+
+.timeline-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-top: 6px;
+}
+
+.timeline-content {
+    flex: 1;
+}
+
+.timeline-title {
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.timeline-time {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.password-strength {
+    height: 8px;
+    border-radius: 4px;
+    background: #e0e5ec;
+    overflow: hidden;
+    margin-top: 8px;
+}
+
+.password-strength-bar {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.password-strength-text {
+    font-size: 0.875rem;
+    margin-top: 4px;
+    text-align: right;
+}
+
+.session-card {
+    padding: 16px;
+    border-radius: 16px;
+    background: #e0e5ec;
+    box-shadow: 3px 3px 6px #bec3c9, -3px -3px 6px #ffffff;
+    transition: all 0.3s ease;
+}
+
+.session-card:hover {
+    transform: translateX(5px);
+    box-shadow: 5px 5px 10px #bec3c9, -5px -5px 10px #ffffff;
+}
+
+.session-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.session-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: #e0e5ec;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: inset 3px 3px 6px #bec3c9, inset -3px -3px 6px #ffffff;
+}
+
+.session-details {
+    flex: 1;
+}
+
+.session-title {
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.session-info {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.session-actions {
+    margin-top: 12px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.revoke-button {
+    padding: 8px 16px;
+    border-radius: 12px;
+    background: #ef4444;
+    color: white;
+    font-size: 0.875rem;
+    box-shadow: 3px 3px 6px #dc2626, -3px -3px 6px #f87171;
+    transition: all 0.3s ease;
+}
+
+.revoke-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 4px 4px 8px #dc2626, -4px -4px 8px #f87171;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .profile-avatar {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .timeline-filter, .skill-badge {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
+    }
+    
+    .flex.flex-wrap {
+        justify-content: center;
+    }
+    
+    .profile-avatar .camera-button {
+        width: 30px;
+        height: 30px;
+    }
+    
+    .contact-info-item i {
+        font-size: 1.2rem;
+        width: 32px;
+        height: 32px;
+    }
+    
+    .skill-badge .tooltip {
+        width: 200px;
+        font-size: 0.75rem;
+        padding: 8px;
+    }
+    
+    .mfa-step {
+        padding: 12px;
+        margin: 8px 0;
+    }
+    
+    .security-toggle {
+        width: 54px;
+        height: 30px;
+    }
+    
+    .security-toggle .slider:before {
+        height: 22px;
+        width: 22px;
+    }
+    
+    .security-toggle input:checked + .slider:before {
+        transform: translateX(24px);
+    }
+}
+
+@media (max-width: 480px) {
+    .flex.items-center.gap-8 {
+        gap: 0.75rem;
+    }
+    
+    .profile-avatar {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .contact-info-item, .timeline-item, .login-history-row, .session-card {
+        padding: 10px;
+    }
+    
+    .session-icon {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .revoke-button {
+        padding: 6px 12px;
+        font-size: 0.75rem;
+    }
+    
+    .flex.gap-4 {
+        gap: 0.5rem;
+    }
+    
+    .mfa-step {
+        padding: 10px;
+        margin: 5px 0;
+    }
+    
+    .tab-button, .timeline-filter, .skill-badge {
+        margin: 2px;
+    }
+} 

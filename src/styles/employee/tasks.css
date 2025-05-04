@@ -1,0 +1,442 @@
+/* Tasks Component Styles */
+* {
+    font-family: 'Poppins', sans-serif;
+}
+body {
+    background: #e0e5ec;
+    min-height: 100vh;
+}
+.neo-box {
+    border-radius: 24px;
+    background: #e0e5ec;
+    box-shadow: 20px 20px 60px #bec3c9,
+               -20px -20px 60px #ffffff;
+    transition: all 0.3s ease;
+}
+.neo-box:hover {
+    box-shadow: 25px 25px 75px #bec3c9,
+               -25px -25px 75px #ffffff;
+    transform: translateY(-2px);
+}
+.neo-button {
+    border-radius: 16px;
+    background: #e0e5ec;
+    box-shadow: 5px 5px 10px #bec3c9,
+               -5px -5px 10px #ffffff;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+.neo-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 7px 7px 15px #bec3c9,
+               -7px -7px 15px #ffffff;
+}
+.neo-button:active {
+    transform: translateY(0);
+    box-shadow: inset 5px 5px 10px #bec3c9,
+               inset -5px -5px 10px #ffffff;
+}
+.neo-button.primary {
+    background: #2563eb;
+    color: white;
+    box-shadow: 5px 5px 10px #1d4ed8,
+               -5px -5px 10px #3b82f6;
+}
+.neo-button.primary:hover {
+    background: #1d4ed8;
+}
+.main-content {
+    margin-left: 16rem;
+    padding: 2rem;
+    transition: all 0.3s ease;
+}
+
+/* Kanban board styles */
+.kanban-column {
+    min-width: 320px;
+    max-width: 320px;
+    height: calc(100vh - 200px);
+    overflow-y: auto;
+    margin: 10px;
+    padding: 20px;
+    background: #e0e5ec;
+    border-radius: 16px;
+    box-shadow: 5px 5px 10px #bec3c9, -5px -5px 10px #ffffff;
+    transition: all 0.3s ease;
+}
+
+.kanban-column.collapsed {
+    min-width: 60px;
+    max-width: 60px;
+    padding: 10px;
+}
+
+.kanban-column.collapsed .column-content,
+.kanban-column.collapsed .task-count {
+    display: none;
+}
+
+.kanban-column.collapsed .column-header {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+    white-space: nowrap;
+    margin-top: 20px;
+}
+
+.task-card {
+    margin-bottom: 16px;
+    padding: 16px;
+    border-radius: 12px;
+    background: #e0e5ec;
+    box-shadow: 3px 3px 6px #bec3c9, -3px -3px 6px #ffffff;
+    transition: all 0.3s ease;
+    cursor: grab;
+    position: relative;
+    overflow: hidden;
+}
+
+.task-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 5px 5px 10px #bec3c9, -5px -5px 10px #ffffff;
+}
+
+.task-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+}
+
+.task-card.priority-high::before { background-color: #ef4444; }
+.task-card.priority-medium::before { background-color: #f59e0b; }
+.task-card.priority-low::before { background-color: #10b981; }
+
+.task-progress {
+    height: 4px;
+    background: #e5e7eb;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.task-progress-bar {
+    height: 100%;
+    background: #3b82f6;
+    transition: width 0.3s ease;
+}
+
+.column-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.column-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.column-toggle {
+    padding: 4px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.column-toggle:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+/* Task modal styles */
+#taskModal .neo-box {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+#taskModal input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 8px;
+    background: #e0e5ec;
+    border-radius: 4px;
+    box-shadow: inset 2px 2px 4px #bec3c9, inset -2px -2px 4px #ffffff;
+}
+
+#taskModal input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: #3b82f6;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 2px 2px 4px #bec3c9, -2px -2px 4px #ffffff;
+}
+
+/* Rich Text Editor Styles */
+.ql-toolbar {
+    border-radius: 12px 12px 0 0;
+    border: none !important;
+    background: #e0e5ec;
+    box-shadow: inset 3px 3px 6px #bec3c9, inset -3px -3px 6px #ffffff;
+}
+
+.ql-container {
+    border-radius: 0 0 12px 12px;
+    border: none !important;
+    background: #e0e5ec;
+    box-shadow: inset 3px 3px 6px #bec3c9, inset -3px -3px 6px #ffffff;
+}
+
+.neo-checkbox {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    background: #e0e5ec;
+    border: none;
+    box-shadow: inset 2px 2px 4px #bec3c9, inset -2px -2px 4px #ffffff;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    position: relative;
+}
+
+.neo-checkbox:checked {
+    background-color: #3b82f6;
+}
+
+.neo-checkbox:checked::after {
+    content: '✓';
+    position: absolute;
+    color: white;
+    font-size: 12px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.attachment-preview {
+    max-width: 100px;
+    max-height: 100px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+/* Task Statistics Box Styles */
+.task-count-badge {
+    font-weight: 600;
+}
+
+/* Custom Scrollbar */
+.kanban-column::-webkit-scrollbar {
+    width: 8px;
+}
+
+.kanban-column::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.kanban-column::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+.kanban-column::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Responsive styles */
+@media (max-width: 1024px) {
+    .main-content {
+        margin-left: 0;
+        padding: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .kanban-column {
+        min-width: 280px;
+        max-width: 280px;
+        margin: 5px;
+        padding: 15px;
+    }
+    
+    .sidebar {
+        transform: translateX(-100%);
+        z-index: 50;
+    }
+    
+    .sidebar.show {
+        transform: translateX(0);
+    }
+    
+    .main-content {
+        margin-left: 0;
+    }
+    
+    .kanban-board {
+        padding: 0;
+        margin: 0;
+        gap: 10px;
+    }
+    
+    .task-card {
+        padding: 12px;
+        margin-bottom: 12px;
+    }
+    
+    .grid-cols-4 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    
+    #kanbanBoard {
+        padding-bottom: 20px;
+    }
+}
+
+@media (max-width: 640px) {
+    .neo-box {
+        border-radius: 16px;
+        padding: 15px !important;
+    }
+    
+    .task-card {
+        padding: 12px;
+    }
+    
+    .column-header h3 {
+        font-size: 1rem;
+    }
+    
+    /* Enhanced mobile responsiveness */
+    body {
+        padding: 0.5rem;
+    }
+    
+    .kanban-column {
+        min-width: 240px;
+        max-width: 100%;
+        height: auto;
+        max-height: 500px;
+    }
+    
+    .kanban-board {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .task-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .header-controls {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+        width: 100%;
+    }
+    
+    .header-controls input, .header-controls select {
+        width: 100%;
+    }
+    
+    .neo-button {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+    }
+    
+    .column-toggle {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-content {
+        padding: 0.75rem;
+    }
+    
+    .neo-box.p-6 {
+        padding: 0.75rem !important;
+    }
+    
+    .kanban-column {
+        min-width: 100%;
+        margin-left: 0;
+        margin-right: 0;
+    }
+    
+    .task-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .filter-controls {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .filter-controls > div {
+        width: 100%;
+    }
+}
+
+/* Form Element Styles */
+input[type="text"], 
+input[type="number"], 
+input[type="email"],
+input[type="date"],
+select,
+textarea {
+    border-radius: 12px;
+    background: #e0e5ec;
+    box-shadow: inset 3px 3px 6px #bec3c9, inset -3px -3px 6px #ffffff;
+    border: none;
+    outline: none;
+    padding: 10px 15px;
+    width: 100%;
+    transition: all 0.3s ease;
+}
+
+input[type="text"]:focus, 
+input[type="number"]:focus, 
+input[type="email"]:focus,
+input[type="date"]:focus,
+select:focus,
+textarea:focus {
+    box-shadow: inset 4px 4px 8px #bec3c9, inset -4px -4px 8px #ffffff;
+}
+
+/* Modal selector styles */
+#taskModal select {
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1.5em 1.5em;
+    padding-right: 2.5rem;
+}
+
+/* Scrollbar styles for modal */
+#taskModal .overflow-y-auto {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #e0e5ec;
+}
+
+#taskModal .overflow-y-auto::-webkit-scrollbar {
+    width: 6px;
+}
+
+#taskModal .overflow-y-auto::-webkit-scrollbar-track {
+    background: #e0e5ec;
+}
+
+#taskModal .overflow-y-auto::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 3px;
+} 

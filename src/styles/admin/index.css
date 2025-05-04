@@ -1,0 +1,9 @@
+/* Admin Styles Index */
+
+@import './dashboard.css';
+@import './attendance-management.css';
+@import './employee-management.css';
+@import './manager-management.css';
+@import './task-management.css';
+@import './leave-reimbursement.css';
+@import './wellbeing.css'; 

@@ -1,0 +1,9 @@
+/* Manager Styles - Main Import File */
+
+/* Import all manager style files */
+@import './styles.css';
+@import './charts.css';
+@import './animations.css';
+@import './profile.css';
+
+/* Add any global manager styles here that don't fit in specific files */ 

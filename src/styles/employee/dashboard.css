@@ -1,0 +1,200 @@
+/* Dashboard Components Styling */
+* {
+    font-family: 'Poppins', sans-serif;
+}
+
+.neo-box {
+    border-radius: 24px;
+    background: #e0e5ec;
+    box-shadow: 20px 20px 60px #bec3c9,
+               -20px -20px 60px #ffffff;
+    transition: all 0.3s ease;
+}
+
+.neo-box:hover {
+    box-shadow: 25px 25px 75px #bec3c9,
+               -25px -25px 75px #ffffff;
+    transform: translateY(-2px);
+}
+
+.neo-button {
+    border-radius: 16px;
+    background: #e0e5ec;
+    box-shadow: 5px 5px 10px #bec3c9,
+               -5px -5px 10px #ffffff;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.neo-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 7px 7px 15px #bec3c9,
+               -7px -7px 15px #ffffff;
+}
+
+.neo-button:active {
+    transform: translateY(0);
+    box-shadow: inset 5px 5px 10px #bec3c9,
+               inset -5px -5px 10px #ffffff;
+}
+
+.neo-button.primary {
+    background: #2563eb;
+    color: white;
+    box-shadow: 5px 5px 10px #1d4ed8,
+               -5px -5px 10px #3b82f6;
+}
+
+.neo-button.primary:hover {
+    background: #1d4ed8;
+}
+
+.task-item {
+    border-radius: 16px;
+    padding: 16px;
+    background: #e0e5ec;
+    box-shadow: 3px 3px 6px #bec3c9,
+               -3px -3px 6px #ffffff;
+    transition: all 0.3s ease;
+    margin-bottom: 12px;
+}
+
+.task-item:hover {
+    transform: translateX(5px);
+    box-shadow: 5px 5px 10px #bec3c9,
+               -5px -5px 10px #ffffff;
+}
+
+.task-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    margin-right: 12px;
+}
+
+.announcement-item {
+    border-radius: 16px;
+    padding: 16px;
+    background: #e0e5ec;
+    box-shadow: 3px 3px 6px #bec3c9,
+               -3px -3px 6px #ffffff;
+    transition: all 0.3s ease;
+    margin-bottom: 12px;
+}
+
+.announcement-item:hover {
+    transform: translateX(5px);
+    box-shadow: 5px 5px 10px #bec3c9,
+               -5px -5px 10px #ffffff;
+}
+
+.announcement-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    margin-right: 12px;
+}
+
+/* Header Styling */
+.header-container {
+    position: relative;
+    width: 100%;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.profile-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.profile-avatar {
+    width: 3rem;
+    height: 3rem;
+    position: relative;
+}
+
+.status-dot {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 0.75rem;
+    height: 0.75rem;
+    background: #10b981;
+    border: 2px solid white;
+    border-radius: 50%;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Responsive Styles */
+@media (max-width: 1024px) {
+    .neo-box.p-6 {
+        padding: 1rem !important;
+    }
+
+    .profile-avatar {
+        width: 3rem;
+        height: 3rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .neo-box.p-6 {
+        padding: 0.75rem !important;
+    }
+
+    .header-content {
+        gap: 0.75rem;
+    }
+
+    .profile-avatar {
+        width: 2.5rem;
+        height: 2.5rem;
+    }
+
+    h1.text-3xl {
+        font-size: 1.5rem !important;
+    }
+
+    p.text-lg {
+        font-size: 0.875rem !important;
+    }
+
+    .neo-button {
+        padding: 0.5rem !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .header-content {
+        flex-wrap: wrap;
+    }
+
+    .profile-info {
+        flex: 1;
+        min-width: 200px;
+    }
+
+    .action-buttons {
+        margin-left: auto;
+    }
+} 

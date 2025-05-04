@@ -1,0 +1,202 @@
+/* Chart Component Styles */
+
+/* General chart styles */
+.chart-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: visible !important;
+  z-index: 1;
+}
+
+.chart-wrapper canvas {
+  position: relative;
+  z-index: 5;
+}
+
+/* Performance Chart */
+.performance-chart-container {
+  min-height: 340px;
+  position: relative;
+  z-index: 10;
+}
+
+.performance-chart-controls {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  position: relative;
+  z-index: 15;
+}
+
+.performance-chart-tab {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.performance-chart-tab.active {
+  background: #3b82f6;
+  color: white;
+}
+
+/* Task Distribution Chart */
+.task-distribution-container {
+  min-height: 340px;
+  position: relative;
+  z-index: 10;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  margin-right: 1rem;
+  position: relative;
+  z-index: 15;
+}
+
+.legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.legend-color.completed {
+  background: #10B981;
+}
+
+.legend-color.in-progress {
+  background: #3B82F6;
+}
+
+.legend-color.pending {
+  background: #F59E0B;
+}
+
+/* Attendance Chart */
+.attendance-chart-container {
+  min-height: 340px;
+  position: relative;
+  z-index: 10;
+}
+
+.attendance-metrics {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 1rem;
+  position: relative;
+  z-index: 15;
+}
+
+.attendance-metric {
+  text-align: center;
+}
+
+.attendance-metric-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.attendance-metric-label {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+/* Productivity Chart */
+.productivity-chart-container {
+  min-height: 340px;
+  position: relative;
+  z-index: 10;
+}
+
+.productivity-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+  position: relative;
+  z-index: 15;
+}
+
+.productivity-metric {
+  text-align: center;
+}
+
+.productivity-score {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.productivity-label {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+/* Chart Loading State */
+.chart-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.7);
+  z-index: 20;
+}
+
+/* Chart height utilities */
+.chart-height-400 {
+  height: 400px;
+}
+
+.chart-height-280 {
+  height: 280px;
+  padding: 5px;
+}
+
+/* Chart tooltip customization */
+.chart-tooltip {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 0.75rem;
+  border: 1px solid #e5e7eb;
+  z-index: 25;
+  pointer-events: none;
+}
+
+.tooltip-title {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  color: #1f2937;
+}
+
+.tooltip-data {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.tooltip-color {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.tooltip-label {
+  font-size: 0.875rem;
+  color: #4b5563;
+}
+
+.tooltip-value {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1f2937;
+  margin-left: auto;
+} 
