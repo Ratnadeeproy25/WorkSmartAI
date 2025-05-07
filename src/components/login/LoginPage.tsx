@@ -19,6 +19,7 @@ const LoginPage: React.FC = () => {
   const [qrKey, setQrKey] = useState(Date.now());
   const [qrOtp, setQrOtp] = useState<string>(generateOtp());
   const [mfaTimeLeft, setMfaTimeLeft] = useState(300);
+  const [showPopup, setShowPopup] = useState(true);
 
   function generateOtp() {
     return Math.floor(100000 + Math.random() * 900000).toString();
@@ -53,6 +54,10 @@ const LoginPage: React.FC = () => {
       return () => clearInterval(timer);
     }
   }, [activeSection]);
+
+  useEffect(() => {
+    setShowPopup(true);
+  }, []);
 
   const handleRoleSelect = (role: string) => {
     setSelectedRole(role);
@@ -131,6 +136,22 @@ const LoginPage: React.FC = () => {
           <HelpSection onBack={() => setActiveSection('qr')} />
         )}
       </div>
+
+      {showPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md">
+            <h2 className="text-xl font-bold mb-2">Project Under Progress</h2>
+            <p className="mb-4">This project is under progress. Many features are broken and under development. By the time being you explore the site</p>
+            <h3 className="text-xl font-bold mb-2">Open for feedback</h3>
+            <button
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+              onClick={() => setShowPopup(false)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
