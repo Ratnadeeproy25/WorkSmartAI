@@ -1,0 +1,201 @@
+/* Drag and Drop styles for Task Management */
+
+.task-container {
+  cursor: grab;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  margin-bottom: 16px;
+}
+
+.task-container:active {
+  cursor: grabbing;
+}
+
+.task-container.dragging {
+  opacity: 0.7;
+  transform: scale(1.05);
+  z-index: 100;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.task-card {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.task-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.task-card .task-progress {
+  height: 6px;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+/* Kanban board container */
+.kanban-board-container {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 1rem;
+  margin: 0 -1rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  scroll-padding: 1rem;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+}
+
+/* Add visible scrollbar for better UX */
+.kanban-board-container::-webkit-scrollbar {
+  height: 8px;
+}
+
+.kanban-board-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.kanban-board-container::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.kanban-board-container::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+.kanban-column {
+  min-width: 280px;
+  width: 280px;
+  flex: 0 0 280px;
+  display: flex;
+  flex-direction: column;
+  background-color: #f0f2f5;
+  border-radius: 12px;
+  box-shadow: var(--neo-shadow);
+  padding: 16px;
+  position: relative;
+  transition: all 0.3s ease;
+  min-height: 500px;
+  max-height: calc(100vh - 300px);
+}
+
+/* Responsive column widths */
+@media (min-width: 1200px) {
+  .kanban-column {
+    min-width: 300px;
+    width: 300px;
+    flex: 0 0 300px;
+  }
+}
+
+@media (max-width: 768px) {
+  .kanban-column {
+    min-width: 260px;
+    width: 260px;
+    flex: 0 0 260px;
+  }
+}
+
+.kanban-column.collapsed {
+  min-width: 60px;
+  width: 60px;
+  flex: 0 0 60px;
+  overflow: hidden;
+}
+
+.kanban-column.drag-over {
+  background-color: rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+.column-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.05);
+}
+
+.column-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.column-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #6b7280;
+  transition: color 0.3s ease;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.column-toggle:hover {
+  color: #374151;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.column-content {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 200px;
+  padding-right: 4px;
+}
+
+.column-tasks {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Line clamp for task descriptions */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-height: 2.6em; /* Fallback for non-WebKit browsers */
+}
+
+/* Custom scrollbar for column content */
+.column-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.column-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.column-content::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.column-content::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+/* Neo button styles for the "Move to" button */
+.neo-button.text-xs {
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.neo-button.text-xs:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+} 

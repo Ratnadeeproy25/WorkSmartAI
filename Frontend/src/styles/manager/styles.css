@@ -1,0 +1,519 @@
+/* Manager Dashboard Styles */
+
+/* Root Variables for theme colors */
+:root {
+  --primary: #3b82f6;
+  --primary-light: #93c5fd;
+  --primary-dark: #1d4ed8;
+  
+  --success: #10b981;
+  --success-light: #a7f3d0;
+  --success-dark: #047857;
+  
+  --warning: #f59e0b;
+  --warning-light: #fcd34d;
+  --warning-dark: #b45309;
+  
+  --danger: #ef4444;
+  --danger-light: #fca5a5;
+  --danger-dark: #b91c1c;
+  
+  --neutral-50: #f9fafb;
+  --neutral-100: #f3f4f6;
+  --neutral-200: #e5e7eb;
+  --neutral-300: #d1d5db;
+  --neutral-400: #9ca3af;
+  --neutral-500: #6b7280;
+  --neutral-600: #4b5563;
+  --neutral-700: #374151;
+  --neutral-800: #1f2937;
+  --neutral-900: #111827;
+  
+  --neo-bg: #e0e5ec;
+  --neo-shadow-dark: #bec3c9;
+  --neo-shadow-light: #ffffff;
+}
+
+/* General Layout */
+.manager-dashboard-container {
+  min-height: 100vh;
+  background-color: var(--neo-bg);
+  overflow-x: hidden;
+}
+
+/* Reset some global styles */
+.manager-dashboard-container button {
+  outline: none;
+  border: none;
+}
+
+.manager-dashboard-container h1,
+.manager-dashboard-container h2,
+.manager-dashboard-container h3,
+.manager-dashboard-container h4,
+.manager-dashboard-container h5,
+.manager-dashboard-container h6,
+.manager-dashboard-container p {
+  margin: 0;
+}
+
+/* Utility classes */
+.text-primary { color: var(--primary); }
+.text-success { color: var(--success); }
+.text-warning { color: var(--warning); }
+.text-danger { color: var(--danger); }
+
+.bg-primary { background-color: var(--primary); }
+.bg-success { background-color: var(--success); }
+.bg-warning { background-color: var(--warning); }
+.bg-danger { background-color: var(--danger); }
+
+.flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.space-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.gap-sm { gap: 0.5rem; }
+.gap-md { gap: 1rem; }
+.gap-lg { gap: 2rem; }
+
+.m-0 { margin: 0; }
+.p-0 { padding: 0; }
+
+/* Sidebar styles */
+.sidebar {
+  width: 250px;
+  background-color: var(--neo-bg);
+  box-shadow: 4px 0 8px rgba(0, 0, 0, 0.1);
+  z-index: 50;
+  height: 100vh;
+  overflow-y: auto;
+  transition: transform 0.3s ease;
+}
+
+.sidebar-overlay {
+  backdrop-filter: blur(2px);
+}
+
+/* Settings Modal Styles */
+.settings-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+  animation: fade-in 0.3s ease;
+}
+
+.settings-modal {
+  animation: scale-in 0.3s ease;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 24px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--neutral-300);
+  transition: .4s;
+  border-radius: 24px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+  background-color: var(--primary);
+}
+
+input:checked + .toggle-slider:before {
+  transform: translateX(24px);
+}
+
+.neo-button-primary {
+  background-color: var(--primary);
+  color: white;
+  border-radius: 8px;
+  box-shadow: 2px 2px 5px var(--neo-shadow-dark), -2px -2px 5px var(--neo-shadow-light);
+  transition: all 0.2s ease;
+}
+
+.neo-button-primary:hover {
+  background-color: var(--primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 3px 3px 6px var(--neo-shadow-dark), -3px -3px 6px var(--neo-shadow-light);
+}
+
+.neo-button-secondary {
+  background-color: var(--neo-bg);
+  color: var(--neutral-700);
+  border-radius: 8px;
+  box-shadow: 2px 2px 5px var(--neo-shadow-dark), -2px -2px 5px var(--neo-shadow-light);
+  transition: all 0.2s ease;
+}
+
+.neo-button-secondary:hover {
+  color: var(--neutral-900);
+  transform: translateY(-1px);
+  box-shadow: 3px 3px 6px var(--neo-shadow-dark), -3px -3px 6px var(--neo-shadow-light);
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Responsive adjustments for sidebar */
+@media (max-width: 1024px) {
+  .main-content {
+    width: 100%;
+    margin-left: 0 !important;
+  }
+  
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 100;
+  }
+}
+
+/* Dashboard content styles */
+.dashboard-header {
+  margin-bottom: 2rem;
+}
+
+.dashboard-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 0.25rem;
+}
+
+.dashboard-subtitle {
+  font-size: 1rem;
+  color: #6b7280;
+}
+
+/* Improved layout and spacing */
+.main-content {
+  position: relative;
+  z-index: 1;
+}
+
+.neo-box {
+  border-radius: 16px;
+  background: var(--neo-bg);
+  box-shadow: 5px 5px 10px var(--neo-shadow-dark), -5px -5px 10px var(--neo-shadow-light);
+  margin-bottom: 20px;
+  overflow: visible;
+  position: relative;
+}
+
+.stats-grid {
+  position: relative;
+  z-index: 20;
+  margin-bottom: 2rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+}
+
+.chart-grid {
+  position: relative;
+  z-index: 10;
+  margin-bottom: 2rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+  gap: 2rem;
+}
+
+/* Additional responsive utilities */
+@media (max-width: 768px) {
+  .hide-mobile {
+    display: none;
+  }
+  
+  .chart-grid {
+    gap: 1.5rem;
+  }
+  
+  .stats-grid {
+    gap: 1rem;
+  }
+  
+  .neo-box {
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .chart-height-400 {
+    height: 300px;
+  }
+  
+  .chart-height-280 {
+    height: 220px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  .hide-tablet {
+    display: none;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hide-desktop {
+    display: none;
+  }
+}
+
+@media (max-width: 1100px) {
+  .chart-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .chart-height-400 {
+    height: 250px;
+  }
+  
+  .chart-height-280 {
+    height: 180px;
+  }
+}
+
+/* Dashboard cards */
+.dashboard-card {
+  background: #e0e5ec;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.dashboard-card-header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dashboard-card-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.dashboard-card-body {
+  padding: 1.5rem;
+}
+
+/* Metric styles */
+.metric-value {
+  font-size: 2.25rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 0.25rem;
+}
+
+.metric-label {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.metric-trend {
+  display: flex;
+  align-items: center;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}
+
+.metric-trend.positive {
+  color: #10b981;
+}
+
+.metric-trend.negative {
+  color: #ef4444;
+}
+
+/* Button styles */
+.tab-button {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.tab-button.active {
+  background: #2563eb;
+  color: white;
+}
+
+/* TeamMembers component styles */
+.team-members-container {
+  margin-bottom: 2rem;
+}
+
+.team-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+}
+
+.team-table th {
+  font-weight: 600;
+  transition: background-color 0.2s ease;
+}
+
+.team-table th:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.team-table tbody tr {
+  transition: all 0.2s ease;
+  border-bottom: 1px solid var(--neutral-200);
+}
+
+.team-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.table-row-hover:hover {
+  background-color: rgba(59, 130, 246, 0.05);
+}
+
+.neo-input {
+  background: var(--neo-bg);
+  border-radius: 8px;
+  box-shadow: inset 2px 2px 5px var(--neo-shadow-dark), inset -2px -2px 5px var(--neo-shadow-light);
+  border: none;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.neo-input:focus {
+  box-shadow: inset 3px 3px 7px var(--neo-shadow-dark), inset -3px -3px 7px var(--neo-shadow-light);
+}
+
+.neo-button-sm {
+  background: var(--neo-bg);
+  border-radius: 6px;
+  box-shadow: 2px 2px 5px var(--neo-shadow-dark), -2px -2px 5px var(--neo-shadow-light);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+}
+
+.neo-button-sm:hover {
+  box-shadow: 3px 3px 6px var(--neo-shadow-dark), -3px -3px 6px var(--neo-shadow-light);
+  transform: translateY(-1px);
+}
+
+.neo-button-sm:active {
+  box-shadow: inset 2px 2px 5px var(--neo-shadow-dark), inset -2px -2px 5px var(--neo-shadow-light);
+  transform: translateY(0);
+}
+
+/* Notifications component styles */
+.notification-dropdown {
+  animation: fade-in-down 0.3s ease;
+  box-shadow: 4px 4px 10px var(--neo-shadow-dark), -4px -4px 10px var(--neo-shadow-light);
+}
+
+.notification-list {
+  scrollbar-width: thin;
+  scrollbar-color: var(--neutral-300) var(--neo-bg);
+}
+
+.notification-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.notification-list::-webkit-scrollbar-track {
+  background: var(--neo-bg);
+}
+
+.notification-list::-webkit-scrollbar-thumb {
+  background-color: var(--neutral-300);
+  border-radius: 3px;
+}
+
+.notification-item {
+  transition: background-color 0.2s ease;
+}
+
+.notification-item:hover {
+  background-color: var(--neutral-100);
+}
+
+.notification-icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@keyframes fade-in-down {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+} 

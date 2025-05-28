@@ -1,0 +1,88 @@
+.neo-input {
+  border-radius: 10px;
+  background: #f3f4f6;
+  box-shadow: 0 2px 6px #e0e5ec, 0 -2px 6px #ffffff, inset 2px 2px 6px #bec3c9, inset -2px -2px 6px #ffffff;
+  border: 1px solid #d1d5db;
+  transition: all 0.3s ease;
+  outline: none;
+  width: 100%;
+  padding: 0.85rem 1rem;
+  font-size: 1rem;
+  color: #22223b;
+}
+
+.neo-input:focus {
+  box-shadow: 0 2px 8px #dbeafe, 0 -2px 8px #ffffff, inset 3px 3px 8px #bec3c9, inset -3px -3px 8px #ffffff;
+  border: 1.5px solid #2563eb;
+  outline: none;
+}
+
+.relative {
+  position: relative;
+}
+
+.absolute {
+  position: absolute;
+}
+
+.forgot-link {
+  background: none;
+  border: none;
+  color: #2563eb;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  margin: 0.5rem 0 0.5rem 0;
+  text-align: left;
+  transition: color 0.2s;
+}
+
+.forgot-link:hover, .forgot-link:focus {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Standard Login Styles */
+.neo-morphism {
+  background: #e0e5ec;
+  border-radius: 24px;
+  box-shadow: 9px 9px 16px rgba(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5);
+  padding: 20px;
+}
+
+.neo-input {
+  background: #e0e5ec;
+  border: none;
+  border-radius: 16px;
+  box-shadow: inset 2px 2px 5px #b8b9be, inset -2px -2px 5px #ffffff;
+  transition: box-shadow 0.3s ease;
+  outline: none;
+}
+
+.neo-input:focus {
+  box-shadow: inset 4px 4px 5px #b8b9be, inset -4px -4px 5px #ffffff;
+}
+
+.neo-error-box {
+  background: #fee2e2;
+  color: #ef4444;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  border-left: 4px solid #ef4444;
+  box-shadow: 2px 2px 5px rgba(239, 68, 68, 0.1);
+} 

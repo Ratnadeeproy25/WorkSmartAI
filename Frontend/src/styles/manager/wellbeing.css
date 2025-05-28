@@ -1,0 +1,178 @@
+/* Manager Wellbeing Page Styles */
+.mood-btn {
+    border-radius: 16px;
+    background: #e0e5ec;
+    box-shadow: 5px 5px 10px #a3b1c6, -5px -5px 10px #ffffff;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.mood-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 7px 7px 15px #a3b1c6, -7px -7px 15px #ffffff;
+}
+
+.mood-btn.active {
+    box-shadow: inset 5px 5px 10px #a3b1c6, inset -5px -5px 10px #ffffff;
+    transform: translateY(1px);
+}
+
+.tips-carousel {
+    position: relative;
+    overflow: hidden;
+    border-radius: 20px;
+    background: #e0e5ec;
+    box-shadow: inset 5px 5px 10px #a3b1c6, inset -5px -5px 10px #ffffff;
+    padding: 2rem;
+    min-height: 250px;
+}
+
+.tips-container {
+    display: flex;
+    transition: transform 0.5s ease;
+    gap: 2rem;
+}
+
+.tip-card {
+    min-width: 100%;
+    padding: 2rem;
+    background: #e0e5ec;
+    border-radius: 16px;
+    box-shadow: 5px 5px 10px #a3b1c6, -5px -5px 10px #ffffff;
+    transition: all 0.3s ease;
+}
+
+.tip-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #e0e5ec;
+    box-shadow: 5px 5px 10px #a3b1c6, -5px -5px 10px #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 10;
+}
+
+.tip-nav:hover {
+    box-shadow: 7px 7px 15px #a3b1c6, -7px -7px 15px #ffffff;
+    transform: translateY(-50%) scale(1.1);
+}
+
+.tip-nav.prev {
+    left: 1rem;
+}
+
+.tip-nav.next {
+    right: 1rem;
+}
+
+.dashboard-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+}
+
+.metric-value {
+    font-size: 2rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.metric-label {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+/* Timer styles */
+.timer-display {
+    font-size: 2.5rem;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.timer-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .mood-buttons {
+        flex-wrap: wrap;
+    }
+    
+    .mood-btn {
+        padding: 0.75rem;
+        font-size: 0.875rem;
+    }
+    
+    .metric-value {
+        font-size: 1.5rem;
+    }
+    
+    .timer-display {
+        font-size: 2rem;
+    }
+    
+    .tips-carousel {
+        padding: 1.5rem;
+        min-height: 200px;
+    }
+    
+    .tip-card {
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 640px) {
+    .mood-btn {
+        padding: 0.5rem;
+        font-size: 0.75rem;
+    }
+    
+    .mood-btn i {
+        font-size: 1.5rem !important;
+    }
+    
+    .metric-value {
+        font-size: 1.25rem;
+    }
+    
+    .tips-carousel {
+        padding: 1rem;
+        min-height: 180px;
+    }
+    
+    .tip-card {
+        padding: 1rem;
+    }
+    
+    .dashboard-link {
+        font-size: 0.8rem;
+        padding: 0.5rem;
+    }
+    
+    .dashboard-link i {
+        font-size: 0.9rem;
+    }
+    
+    .timer-display {
+        font-size: 1.75rem;
+    }
+} 

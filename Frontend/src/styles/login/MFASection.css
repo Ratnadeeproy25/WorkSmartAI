@@ -1,0 +1,49 @@
+.mfa-input {
+  width: 48px;
+  height: 56px;
+  font-size: 2rem;
+  font-family: 'Poppins', 'Fira Mono', 'Consolas', monospace;
+  font-weight: 600;
+  text-align: center;
+  line-height: 56px;
+  padding: 0;
+  box-sizing: border-box;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  color: #000000;
+  z-index: 10;
+  position: relative;
+  box-shadow: none;
+  -webkit-text-fill-color: #000000;
+  -webkit-opacity: 1;
+  opacity: 1;
+}
+
+/* Reset any potentially conflicting styles */
+.mfa-input::before,
+.mfa-input::after {
+  display: none;
+}
+
+.flex {
+  display: flex;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.input-correct {
+  background-color: #d1fae5 !important;
+  color: #059669 !important;
+  border: 2px solid #10b981 !important;
+  -webkit-text-fill-color: #059669 !important;
+}
+
+.input-incorrect {
+  background-color: #fee2e2 !important;
+  color: #dc2626 !important;
+  border: 2px solid #ef4444 !important;
+  -webkit-text-fill-color: #dc2626 !important;
+} 

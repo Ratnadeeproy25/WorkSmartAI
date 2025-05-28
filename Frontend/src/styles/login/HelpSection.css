@@ -1,0 +1,15 @@
+.help-card {
+  border-radius: 16px;
+  padding: 16px;
+  background: #e0e5ec;
+  box-shadow: 5px 5px 10px #bec3c9,
+              -5px -5px 10px #ffffff;
+  margin: 8px 0;
+  transition: all 0.3s ease;
+}
+
+.help-card:hover {
+  transform: translateX(5px);
+  box-shadow: 7px 7px 15px #bec3c9,
+              -7px -7px 15px #ffffff;
+} 

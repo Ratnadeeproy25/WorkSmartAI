@@ -1,0 +1,191 @@
+/* Wellbeing specific styles */
+body {
+  min-height: 100vh;
+  overflow-x: hidden;
+  background-color: #e0e5ec;
+}
+
+/* Main content container */
+.main-content {
+  background-color: #e0e5ec;
+}
+
+/* Neumorphic UI elements */
+.neo-box, .neo-container {
+  border-radius: 20px;
+  background: #e0e5ec;
+  box-shadow: 10px 10px 20px #a3b1c6, -10px -10px 20px #ffffff;
+  transition: all 0.3s ease;
+}
+
+.neo-box:hover {
+  box-shadow: 15px 15px 30px #a3b1c6, -15px -15px 30px #ffffff;
+  transform: translateY(-5px);
+}
+
+.neo-button {
+  border-radius: 12px;
+  background: #e0e5ec;
+  box-shadow: 5px 5px 10px #a3b1c6, -5px -5px 10px #ffffff;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.neo-button:hover {
+  box-shadow: 8px 8px 16px #a3b1c6, -8px -8px 16px #ffffff;
+  transform: translateY(-3px);
+}
+
+.neo-button:active {
+  box-shadow: inset 5px 5px 10px #a3b1c6, inset -5px -5px 10px #ffffff;
+  transform: translateY(0);
+}
+
+.neo-input {
+  border-radius: 12px;
+  background: #e0e5ec;
+  box-shadow: inset 5px 5px 10px #a3b1c6, inset -5px -5px 10px #ffffff;
+  transition: all 0.3s ease;
+  outline: none;
+  border: none;
+  padding: 0.75rem 1rem;
+  width: 100%;
+}
+
+.mood-btn {
+  border-radius: 16px;
+  background: #e0e5ec;
+  box-shadow: 5px 5px 10px #a3b1c6, -5px -5px 10px #ffffff;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 150px;
+}
+
+.mood-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 8px 8px 16px #a3b1c6, -8px -8px 16px #ffffff;
+}
+
+.mood-btn.active {
+  box-shadow: inset 5px 5px 10px #a3b1c6, inset -5px -5px 10px #ffffff;
+  transform: translateY(1px);
+}
+
+.metric-card {
+  border-radius: 20px;
+  padding: 20px;
+  background: #e0e5ec;
+  box-shadow: 5px 5px 10px #a3b1c6, -5px -5px 10px #ffffff;
+  transition: all 0.3s ease;
+  height: 100%;
+}
+
+.metric-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 8px 8px 16px #a3b1c6, -8px -8px 16px #ffffff;
+}
+
+.metric-value {
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.metric-label {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.tips-carousel {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  background: #e0e5ec;
+  box-shadow: inset 5px 5px 10px #a3b1c6, inset -5px -5px 10px #ffffff;
+  padding: 2rem;
+  min-height: 250px;
+}
+
+.tips-container {
+  display: flex;
+  transition: transform 0.5s ease;
+  gap: 2rem;
+}
+
+.tip-card {
+  min-width: 100%;
+  padding: 2rem;
+  background: #e0e5ec;
+  border-radius: 16px;
+  box-shadow: 5px 5px 10px #a3b1c6, -5px -5px 10px #ffffff;
+  transition: all 0.3s ease;
+}
+
+.tip-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #e0e5ec;
+  box-shadow: 5px 5px 10px #a3b1c6, -5px -5px 10px #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.tip-nav:hover {
+  box-shadow: 8px 8px 16px #a3b1c6, -8px -8px 16px #ffffff;
+  transform: translateY(-50%) scale(1.1);
+}
+
+.tip-nav.prev {
+  left: 1rem;
+}
+
+.tip-nav.next {
+  right: 1rem;
+}
+
+/* Media queries for responsive layout */
+@media (max-width: 1024px) {
+  .main-content {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .grid-cols-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .mood-buttons {
+    justify-content: center;
+    gap: 1rem;
+  }
+  
+  .mood-btn {
+    max-width: 120px;
+  }
+}
+
+@media (max-width: 480px) {
+  .grid-cols-4, .grid-cols-3, .grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+  
+  .mood-btn {
+    max-width: 100%;
+    margin-bottom: 0.5rem;
+  }
+} 

@@ -1,0 +1,513 @@
+/* Employee Task Page Styles - Aligned with Manager Portal */
+
+/* General page container */
+.employee-tasks-container {
+  background-color: #e0e5ec;
+  min-height: screen;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* Main content area */
+.employee-main-content {
+  transition: all 0.3s ease;
+  padding: 1.5rem; /* 24px */
+}
+
+@media (min-width: 768px) {
+  .employee-main-content {
+    padding: 1.5rem; /* 24px */
+  }
+}
+
+@media (min-width: 1024px) {
+  .employee-main-content.sidebar-open {
+    margin-left: 250px; /* Width of the sidebar */
+  }
+}
+
+.employee-content-wrapper {
+  max-width: 7xl; /* 1280px */
+  margin-left: auto;
+  margin-right: auto;
+  /* fade-in and slide-in-up animations would be here if defined globally or in NeomorphicUI.css */
+}
+
+/* Page Header (Title, Bell, Settings) */
+.employee-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem; /* 24px */
+}
+
+.employee-page-header h1 {
+  font-size: 1.5rem; /* 24px */
+  line-height: 2rem; /* 32px */
+  font-weight: 700;
+  color: #374151; /* gray-700 */
+}
+
+.employee-page-header .header-actions {
+  display: flex;
+  gap: 1rem; /* 16px */
+}
+
+/* Task Header (My Tasks, Stats, Add Task button) - uses neo-box */
+.employee-task-header .neo-box {
+  padding: 1.25rem; /* 20px */
+  margin-bottom: 2rem; /* 32px */
+}
+
+@media (min-width: 768px) {
+  .employee-task-header .neo-box {
+    padding: 1.5rem; /* 24px */
+  }
+}
+
+.employee-task-header .header-top-row {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap; /* Allow wrapping on small screens */
+  align-items: center;
+  margin-bottom: 1.5rem; /* 24px */
+}
+
+.employee-task-header .header-top-row h2 {
+  font-size: 1.5rem; /* 24px */
+  font-weight: 700;
+  color: #1f2937; /* gray-800 */
+}
+
+.employee-task-header .header-top-row p {
+  font-size: 1rem; /* 16px */
+  color: #4b5563; /* gray-600 */
+}
+
+.employee-task-header .add-task-button-container {
+  margin-top: 1rem; /* Add margin on small screens when it wraps */
+}
+
+@media (min-width: 768px) {
+  .employee-task-header .add-task-button-container {
+    margin-top: 0;
+  }
+}
+
+/* Task Stats Grid - uses neo-box for individual stat items */
+.employee-task-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem; /* 12px */
+}
+
+@media (min-width: 640px) {
+  .employee-task-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 768px) {
+  .employee-task-stats-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1.5rem; /* 24px */
+  }
+}
+
+.employee-task-stats-grid .stat-item .neo-box {
+  padding: 0.75rem; /* 12px */
+  text-align: center;
+  cursor: pointer;
+}
+
+@media (min-width: 768px) {
+  .employee-task-stats-grid .stat-item .neo-box {
+    padding: 1rem; /* 16px */
+  }
+}
+
+.employee-task-stats-grid .stat-item .stat-value {
+  font-size: 1.25rem; /* 20px */
+  font-weight: 700;
+}
+
+@media (min-width: 768px) {
+  .employee-task-stats-grid .stat-item .stat-value {
+    font-size: 1.5rem; /* 24px */
+  }
+}
+
+.employee-task-stats-grid .stat-item .stat-label {
+  font-size: 0.75rem; /* 12px */
+  color: #4b5563; /* gray-600 */
+}
+
+@media (min-width: 768px) {
+  .employee-task-stats-grid .stat-item .stat-label {
+    font-size: 0.875rem; /* 14px */
+  }
+}
+
+/* Search and Filter Panel - uses neo-box */
+.employee-search-filter-panel .neo-box {
+  padding: 1.25rem; /* 20px */
+  margin-bottom: 2rem; /* 32px */
+}
+
+@media (min-width: 768px) {
+  .employee-search-filter-panel .neo-box {
+    padding: 1.5rem; /* 24px */
+  }
+}
+
+/* General Neomorphic UI Styles (Ensure these are consistent or inherited correctly) */
+.neo-box {
+  border-radius: 12px; /* Consistent with manager */
+  background: #e0e5ec;
+  box-shadow: 8px 8px 15px #bec3c9, -8px -8px 15px #ffffff; /* Adjusted for subtlety */
+  transition: all 0.3s ease;
+}
+
+.neo-box:hover {
+  box-shadow: 10px 10px 20px #bec3c9, -10px -10px 20px #ffffff;
+  transform: translateY(-2px);
+}
+
+.neo-button {
+  border-radius: 8px; /* Consistent with manager */
+  background: #e0e5ec;
+  box-shadow: 5px 5px 10px #bec3c9, -5px -5px 10px #ffffff;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  padding: 0.5rem 1rem; /* 8px 16px */
+  font-weight: 500;
+}
+
+.neo-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 7px 7px 15px #bec3c9, -7px -7px 15px #ffffff;
+}
+
+.neo-button:active {
+  transform: translateY(0);
+  box-shadow: inset 3px 3px 7px #bec3c9, inset -3px -3px 7px #ffffff;
+}
+
+.neo-button.primary {
+  background: #2563eb; /* blue-600 */
+  color: white;
+  box-shadow: 4px 4px 8px #1d4ed8, -4px -4px 8px #3b82f6;
+}
+
+.neo-button.primary:hover {
+  background: #1e40af; /* blue-800 */
+}
+
+/* Ensure specific styles from tasks.css that are not dragdrop related are fine */
+/* For example, modal styles, specific input styles if any, etc. */
+
+/* Modal styles from tasks.css (ensure they are compatible) */
+#taskModal input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 8px;
+    background: #e0e5ec;
+    border-radius: 4px;
+    box-shadow: inset 2px 2px 4px #bec3c9, inset -2px -2px 4px #ffffff;
+}
+
+#taskModal input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: #3b82f6;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 2px 2px 4px #bec3c9, -2px -2px 4px #ffffff;
+}
+
+/* Rich Text Editor Styles from tasks.css (ensure they are compatible) */
+.ql-toolbar {
+    border-radius: 12px 12px 0 0;
+    border: none !important;
+    background: #e0e5ec;
+    box-shadow: inset 3px 3px 6px #bec3c9, inset -3px -3px 6px #ffffff;
+}
+
+.ql-container {
+    border-radius: 0 0 12px 12px;
+    border: none !important;
+    background: #e0e5ec;
+    box-shadow: inset 3px 3px 6px #bec3c9, inset -3px -3px 6px #ffffff;
+}
+
+.neo-checkbox {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    background: #e0e5ec;
+    border: none;
+    box-shadow: inset 2px 2px 4px #bec3c9, inset -2px -2px 4px #ffffff;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    position: relative;
+}
+
+.neo-checkbox:checked {
+    background-color: #3b82f6;
+}
+
+.neo-checkbox:checked::after {
+    content: '✓';
+    position: absolute;
+    color: white;
+    font-size: 12px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.attachment-preview {
+    max-width: 100px;
+    max-height: 100px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+/* Specific overrides if tasks.css had conflicting general styles */
+body {
+    background: #e0e5ec;
+    min-height: 100vh;
+    font-family: 'Poppins', sans-serif;
+}
+
+* {
+    font-family: 'Poppins', sans-serif; /* Already here, good */
+}
+
+/* REMOVE Old conflicting styles from tasks.css that are now handled by dragdrop.css or new classes */
+/* For example, old .kanban-column, .task-card (if not matching dragdrop.css), etc. */
+/* The dragdrop.css should take precedence for .kanban-column and .task-card related drag-drop visuals */
+
+/* Remove original .kanban-column from tasks.css as dragdrop.css handles it */
+/* .kanban-column { ... old styles ... } */
+
+/* Remove original .task-card from tasks.css as dragdrop.css handles its base + dragging */
+/* .task-card { ... old styles ... } */
+
+/* Remove original .column-header from tasks.css as dragdrop.css handles it */
+/* .column-header { ... old styles ... } */
+
+/* Custom Scrollbar */
+.kanban-column::-webkit-scrollbar {
+    width: 8px;
+}
+
+.kanban-column::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.kanban-column::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+.kanban-column::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Responsive styles */
+@media (max-width: 1024px) {
+    .main-content {
+        margin-left: 0;
+        padding: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .kanban-column {
+        min-width: 280px;
+        max-width: 280px;
+        margin: 5px;
+        padding: 15px;
+    }
+    
+    .sidebar {
+        transform: translateX(-100%);
+        z-index: 50;
+    }
+    
+    .sidebar.show {
+        transform: translateX(0);
+    }
+    
+    .main-content {
+        margin-left: 0;
+    }
+    
+    .kanban-board {
+        padding: 0;
+        margin: 0;
+        gap: 10px;
+    }
+    
+    .task-card {
+        padding: 12px;
+        margin-bottom: 12px;
+    }
+    
+    .grid-cols-4 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    
+    #kanbanBoard {
+        padding-bottom: 20px;
+    }
+}
+
+@media (max-width: 640px) {
+    .neo-box {
+        border-radius: 16px;
+        padding: 15px !important;
+    }
+    
+    .task-card {
+        padding: 12px;
+    }
+    
+    .column-header h3 {
+        font-size: 1rem;
+    }
+    
+    /* Enhanced mobile responsiveness */
+    body {
+        padding: 0.5rem;
+    }
+    
+    .kanban-column {
+        min-width: 240px;
+        max-width: 100%;
+        height: auto;
+        max-height: 500px;
+    }
+    
+    .kanban-board {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .task-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .header-controls {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+        width: 100%;
+    }
+    
+    .header-controls input, .header-controls select {
+        width: 100%;
+    }
+    
+    .neo-button {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+    }
+    
+    .column-toggle {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-content {
+        padding: 0.75rem;
+    }
+    
+    .neo-box.p-6 {
+        padding: 0.75rem !important;
+    }
+    
+    .kanban-column {
+        min-width: 100%;
+        margin-left: 0;
+        margin-right: 0;
+    }
+    
+    .task-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .filter-controls {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .filter-controls > div {
+        width: 100%;
+    }
+}
+
+/* Form Element Styles */
+input[type="text"], 
+input[type="number"], 
+input[type="email"],
+input[type="date"],
+select,
+textarea {
+    border-radius: 12px;
+    background: #e0e5ec;
+    box-shadow: inset 3px 3px 6px #bec3c9, inset -3px -3px 6px #ffffff;
+    border: none;
+    outline: none;
+    padding: 10px 15px;
+    width: 100%;
+    transition: all 0.3s ease;
+}
+
+input[type="text"]:focus, 
+input[type="number"]:focus, 
+input[type="email"]:focus,
+input[type="date"]:focus,
+select:focus,
+textarea:focus {
+    box-shadow: inset 4px 4px 8px #bec3c9, inset -4px -4px 8px #ffffff;
+}
+
+/* Modal selector styles */
+#taskModal select {
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1.5em 1.5em;
+    padding-right: 2.5rem;
+}
+
+/* Scrollbar styles for modal */
+#taskModal .overflow-y-auto {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #e0e5ec;
+}
+
+#taskModal .overflow-y-auto::-webkit-scrollbar {
+    width: 6px;
+}
+
+#taskModal .overflow-y-auto::-webkit-scrollbar-track {
+    background: #e0e5ec;
+}
+
+#taskModal .overflow-y-auto::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 3px;
+} 

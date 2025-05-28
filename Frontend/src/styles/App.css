@@ -1,0 +1,591 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+@import url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css');
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  font-family: 'Poppins', sans-serif;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background-color: #e0e5ec;
+  margin: 0;
+  padding: 0;
+  color: #333;
+}
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.app-bg {
+  min-height: 100vh;
+  width: 100vw;
+  background: #e0e5ec;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+}
+
+.neo-morphism {
+  border-radius: 16px;
+  background: #e0e5ec;
+  box-shadow: 10px 10px 30px #bec3c9,
+              -10px -10px 30px #ffffff;
+  transition: all 0.3s ease;
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+.neo-morphism:hover {
+  box-shadow: 25px 25px 75px #bec3c9,
+              -25px -25px 75px #ffffff;
+  transform: translateY(-2px);
+}
+
+.neo-button {
+  border-radius: 10px;
+  background: #e0e5ec;
+  box-shadow: 2px 2px 8px #bec3c9,
+              -2px -2px 8px #ffffff;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  padding: 0.85rem 1rem;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #22223b;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-width: 120px;
+}
+
+.neo-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 7px 7px 15px #bec3c9,
+              -7px -7px 15px #ffffff;
+  color: #2563eb;
+}
+
+.neo-button:active {
+  transform: translateY(0);
+  box-shadow: inset 5px 5px 10px #bec3c9,
+              inset -5px -5px 10px #ffffff;
+}
+
+.neo-button.primary {
+  background: #2563eb;
+  color: white;
+  box-shadow: 2px 2px 8px #1d4ed8,
+              -2px -2px 8px #3b82f6;
+}
+
+.neo-button.primary:hover {
+  background: #1d4ed8;
+}
+
+.neo-button.secondary {
+  background: #e0e5ec;
+  color: #22223b;
+  box-shadow: 2px 2px 8px #bec3c9,
+              -2px -2px 8px #ffffff;
+}
+
+.neo-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.neo-button.small {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  min-width: 100px;
+}
+
+.neo-button.large {
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+  min-width: 150px;
+}
+
+.neo-button.full-width {
+  width: 100%;
+}
+
+.neo-input {
+  border-radius: 10px;
+  background: #f3f4f6;
+  box-shadow: 0 2px 6px #e0e5ec, 0 -2px 6px #ffffff, inset 2px 2px 6px #bec3c9, inset -2px -2px 6px #ffffff;
+  border: 1px solid #d1d5db;
+  transition: all 0.3s ease;
+  outline: none;
+  width: 100%;
+  padding: 0.85rem 1rem;
+  font-size: 1rem;
+  color: #22223b;
+}
+
+.neo-input:focus {
+  box-shadow: 0 2px 8px #dbeafe, 0 -2px 8px #ffffff, inset 3px 3px 8px #bec3c9, inset -3px -3px 8px #ffffff;
+  border: 1.5px solid #2563eb;
+  outline: none;
+}
+
+.mfa-input {
+  width: 48px;
+  height: 56px;
+  font-size: 2rem;
+  font-family: 'Poppins', 'Fira Mono', 'Consolas', monospace;
+  font-weight: 600;
+  text-align: center;
+  line-height: 56px;
+  padding: 0;
+  box-sizing: border-box;
+  background: #f3f4f6;
+}
+
+.role-selector {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  width: 100%;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.role-option {
+  flex: 1 1 120px;
+  min-width: 120px;
+  max-width: 180px;
+  box-sizing: border-box;
+  padding: 16px;
+  text-align: center;
+  cursor: pointer;
+  border-radius: 16px;
+  transition: all 0.3s ease;
+}
+
+.role-option:hover {
+  transform: translateY(-2px);
+}
+
+.role-option.selected {
+  background: #2563eb;
+  color: white;
+  box-shadow: 5px 5px 10px #1d4ed8,
+              -5px -5px 10px #3b82f6;
+}
+
+.role-option i {
+  font-size: 1.5rem;
+  margin-bottom: 8px;
+}
+
+.password-strength {
+  height: 6px;
+  border-radius: 3px;
+  transition: all 0.3s ease;
+  margin-top: 8px;
+}
+
+.strength-weak { 
+  background-color: #ef4444; 
+  width: 33%; 
+  box-shadow: 0 0 10px #ef4444;
+}
+
+.strength-medium { 
+  background-color: #f59e0b; 
+  width: 66%; 
+  box-shadow: 0 0 10px #f59e0b;
+}
+
+.strength-strong { 
+  background-color: #10b981; 
+  width: 100%; 
+  box-shadow: 0 0 10px #10b981;
+}
+
+.scanning-animation {
+  animation: scanning 2s infinite;
+}
+
+@keyframes scanning {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+.help-card {
+  border-radius: 16px;
+  padding: 16px;
+  background: #e0e5ec;
+  box-shadow: 5px 5px 10px #bec3c9,
+              -5px -5px 10px #ffffff;
+  margin: 8px 0;
+  transition: all 0.3s ease;
+}
+
+.help-card:hover {
+  transform: translateX(5px);
+  box-shadow: 7px 7px 15px #bec3c9,
+              -7px -7px 15px #ffffff;
+}
+
+.qr-container {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  margin: 0 auto 24px auto;
+  padding: 20px;
+  border-radius: 24px;
+  background: #e0e5ec;
+  box-shadow: 8px 8px 24px #bec3c9, -8px -8px 24px #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qr-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(59, 130, 246, 0.2);
+  border-radius: 24px;
+  animation: scanning 2s infinite;
+}
+
+.timer-container {
+  text-align: center;
+  margin: 24px 0 16px 0;
+}
+
+.timer-text {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: #4b5563;
+  margin-bottom: 12px;
+}
+
+.timer-progress {
+  height: 10px;
+  border-radius: 5px;
+  background: #e0e5ec;
+  box-shadow: inset 2px 2px 4px #bec3c9, inset -2px -2px 4px #ffffff;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.timer-progress-bar {
+  height: 100%;
+  border-radius: 5px;
+  background: #2563eb;
+  transition: width 0.3s ease;
+}
+
+.qr-actions > * + * {
+  margin-top: 1rem;
+}
+
+.help-button {
+  border-radius: 16px;
+  background: #e0e5ec;
+  color: #2563eb;
+  border: 2px solid #2563eb;
+  box-shadow: 2px 2px 8px #bec3c9,
+              -2px -2px 8px #ffffff;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  cursor: pointer;
+  outline: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.help-button:hover, .help-button:focus {
+  background: #2563eb;
+  color: #fff;
+  border-color: #2563eb;
+}
+
+/* Extra spacing for form elements */
+.neo-morphism form > * + * {
+  margin-top: 1.1rem;
+}
+
+/* Title style */
+.neo-morphism h2 {
+  font-weight: 600;
+  color: #22223b;
+  margin-bottom: 1.5rem;
+}
+
+/* Remove excessive shadow on focus for buttons */
+.neo-button:focus {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+/* Make 'Forgot Password?' a text-link */
+.forgot-link {
+  background: none;
+  border: none;
+  color: #2563eb;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  margin: 0.5rem 0 0.5rem 0;
+  text-align: left;
+  transition: color 0.2s;
+}
+.forgot-link:hover, .forgot-link:focus {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+/* Checkbox minimal style */
+input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #2563eb;
+  margin-right: 0.5rem;
+}
+
+/* Utility classes */
+.text-center {
+  text-align: center;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.text-2xl {
+  font-size: 1.5rem;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+.text-gray-800 {
+  color: #1f2937;
+}
+
+.mb-8 {
+  margin-bottom: 2rem;
+}
+
+.p-8 {
+  padding: 2rem;
+}
+
+.mb-6 {
+  margin-bottom: 1.5rem;
+}
+
+.mb-2 {
+  margin-bottom: 0.5rem;
+}
+
+.mt-6 {
+  margin-top: 1.5rem;
+}
+
+.py-3 {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+.px-4 {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.text-gray-700 {
+  color: #374151;
+}
+
+.font-medium {
+  font-weight: 500;
+}
+
+.text-sm {
+  font-size: 0.875rem;
+}
+
+.text-gray-600 {
+  color: #4b5563;
+}
+
+.gap-3 {
+  gap: 0.75rem;
+}
+
+.space-y-4 > * + * {
+  margin-top: 1rem;
+}
+
+.space-y-6 > * + * {
+  margin-top: 1.5rem;
+}
+
+.flex {
+  display: flex;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .neo-morphism {
+    border-radius: 20px;
+  }
+  .role-selector {
+    flex-direction: column;
+  }
+  .mfa-input {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+  .qr-container {
+    width: 160px;
+    height: 160px;
+  }
+}
+
+/* Base styles */
+.main-content {
+  margin-left: 16rem;
+  padding: 2rem;
+  transition: all 0.3s ease;
+}
+
+@media (max-width: 1024px) {
+  .main-content {
+    margin-left: 0;
+  }
+}
+
+/* Common Components */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-primary {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #2563eb;
+}
+
+.btn-secondary {
+  background-color: #f3f4f6;
+  color: #1f2937;
+}
+
+.btn-secondary:hover {
+  background-color: #e5e7eb;
+}
+
+/* Form Elements */
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #4b5563;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  background-color: white;
+  transition: border-color 0.2s ease;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Card Styles */
+.card {
+  background-color: white;
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+.card-header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #f3f4f6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
+.card-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #f3f4f6;
+} 
