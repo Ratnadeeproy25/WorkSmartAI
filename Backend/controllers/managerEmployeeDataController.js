@@ -10,6 +10,8 @@ const mongoose = require('mongoose');
 // Helper function to get assigned employees for a manager
 const getAssignedEmployees = async (managerId) => {
   try {
+    // console.log('🔍 getAssignedEmployees called with managerId:', managerId);
+    
     // Validate managerId
     if (!managerId) {
       throw new Error('Manager ID is required');
@@ -17,6 +19,7 @@ const getAssignedEmployees = async (managerId) => {
 
     // Verify manager exists (check both collections)
     let managerExists = await Manager.findById(managerId);
+    // console.log('👨‍💼 Manager found in Manager collection:', managerExists ? 'Yes' : 'No');
     
     if (!managerExists) {
       // Check if manager exists in Employee collection with manager role
@@ -24,19 +27,92 @@ const getAssignedEmployees = async (managerId) => {
         _id: managerId,
         role: 'manager'
       });
+      // console.log('👤 Manager found in Employee collection:', managerExists ? 'Yes' : 'No');
     }
 
     if (!managerExists) {
+      // console.error('❌ Manager not found in either collection with ID:', managerId);
       throw new Error('Manager not found');
     }
 
-    const employees = await Employee.find({ 
+    // console.log('✅ Manager verified:', managerExists.name, 'Email:', managerExists.email);
+
+    // Find employees assigned to this manager
+    // Try different approaches to find assigned employees
+    let employees = [];
+    
+    // Method 1: Direct ObjectId match
+    const employeesByObjectId = await Employee.find({ 
       manager: managerId,
+      $or: [
+        { role: 'employee' },
+        { role: { $exists: false } }
+      ],
       status: 'Active' 
     }).select('_id id name email department position profilePicture phone location');
     
-    return employees;
+    // console.log(`📊 Found ${employeesByObjectId.length} employees by ObjectId match`);
+    employees = [...employeesByObjectId];
+    
+    // Method 2: If no employees found, try string match (in case of data inconsistency)
+    if (employees.length === 0) {
+      const employeesByStringId = await Employee.find({ 
+        manager: managerId.toString(),
+        $or: [
+          { role: 'employee' },
+          { role: { $exists: false } }
+        ],
+        status: 'Active' 
+      }).select('_id id name email department position profilePicture phone location');
+      
+      // console.log(`📊 Found ${employeesByStringId.length} employees by string ID match`);
+      employees = [...employees, ...employeesByStringId];
+    }
+    
+    // Method 3: Try manager's custom ID if available
+    if (employees.length === 0 && managerExists.id) {
+      const employeesByCustomId = await Employee.find({ 
+        manager: managerExists.id,
+        $or: [
+          { role: 'employee' },
+          { role: { $exists: false } }
+        ],
+        status: 'Active' 
+      }).select('_id id name email department position profilePicture phone location');
+      
+      // console.log(`📊 Found ${employeesByCustomId.length} employees by custom ID match`);
+      employees = [...employees, ...employeesByCustomId];
+    }
+    
+    // Remove duplicates if any
+    const uniqueEmployees = employees.filter((employee, index, self) => 
+      index === self.findIndex(e => e._id.toString() === employee._id.toString())
+    );
+    
+    // console.log(`✅ Total unique employees found: ${uniqueEmployees.length}`);
+    
+    if (uniqueEmployees.length === 0) {
+      // console.log('⚠️ No employees assigned to this manager. Available employees:');
+      const allEmployees = await Employee.find({
+        $or: [
+          { role: 'employee' },
+          { role: { $exists: false } }
+        ]
+      }).select('_id name manager').limit(5);
+      
+      // allEmployees.forEach(emp => {
+      //   console.log(`  - ${emp.name} (ID: ${emp._id}) - Manager: ${emp.manager || 'None'}`);
+      // });
+    } else {
+      // console.log('👥 Assigned employees:');
+      // uniqueEmployees.forEach(emp => {
+      //   console.log(`  - ${emp.name} (${emp.email}) - Department: ${emp.department}`);
+      // });
+    }
+    
+    return uniqueEmployees;
   } catch (error) {
+    // console.error('❌ Error in getAssignedEmployees:', error.message);
     throw new Error('Error fetching assigned employees: ' + error.message);
   }
 };
@@ -55,7 +131,7 @@ const getAssignedEmployeesList = async (req, res) => {
       count: employees.length
     });
   } catch (error) {
-    console.error('Error fetching assigned employees:', error);
+    // console.error('Error fetching assigned employees:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch assigned employees',
@@ -185,10 +261,10 @@ const getTeamAttendance = async (req, res) => {
       stats
     });
   } catch (error) {
-    console.error('Error fetching team attendance:', error);
+    // console.error('Error fetching team attendance:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch team attendance data',
+      message: 'Failed to fetch team attendance',
       error: error.message
     });
   }
@@ -243,7 +319,7 @@ const getPendingLeaveRequests = async (req, res) => {
       data: formattedRequests
     });
   } catch (error) {
-    console.error('Error fetching pending leave requests:', error);
+    // console.error('Error fetching pending leave requests:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch pending leave requests',
@@ -356,7 +432,7 @@ const updateLeaveRequestStatus = async (req, res) => {
         timestamp: new Date()
       });
 
-      console.log(`❌ Manager ${manager.name} rejected leave request ${requestId}`);
+      // console.log(`❌ Manager ${manager.name} rejected leave request ${requestId}`);
     }
 
     await leaveRequest.save();
@@ -380,7 +456,7 @@ const updateLeaveRequestStatus = async (req, res) => {
       message
     });
   } catch (error) {
-    console.error('Error updating leave request status:', error);
+    // console.error('Error updating leave request status:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to update leave request status',
@@ -438,7 +514,7 @@ const getPendingReimbursementRequests = async (req, res) => {
       data: formattedRequests
     });
   } catch (error) {
-    console.error('Error fetching pending reimbursement requests:', error);
+    // console.error('Error fetching pending reimbursement requests:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch pending reimbursement requests',
@@ -551,7 +627,7 @@ const updateReimbursementRequestStatus = async (req, res) => {
         timestamp: new Date()
       });
 
-      console.log(`❌ Manager ${manager.name} rejected reimbursement request ${requestId}`);
+      // console.log(`❌ Manager ${manager.name} rejected reimbursement request ${requestId}`);
     }
     
     await reimbursementRequest.save();
@@ -575,7 +651,7 @@ const updateReimbursementRequestStatus = async (req, res) => {
       message
     });
   } catch (error) {
-    console.error('Error updating reimbursement request:', error);
+    // console.error('Error updating reimbursement request:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to update reimbursement request',
@@ -626,7 +702,7 @@ const getTeamLeaveBalances = async (req, res) => {
     // Initialize missing leave balances
     const missingEmployees = employees.filter(emp => !balanceMap.has(emp._id.toString()));
     if (missingEmployees.length > 0) {
-      console.log(`🔄 Initializing leave balances for ${missingEmployees.length} employees without records`);
+      // console.log(`🔄 Initializing leave balances for ${missingEmployees.length} employees without records`);
       
       for (const employee of missingEmployees) {
         try {
@@ -634,7 +710,7 @@ const getTeamLeaveBalances = async (req, res) => {
           balanceMap.set(employee._id.toString(), newBalance);
           // console.log(`✅ Initialized leave balance for ${employee.name} (${employee.id})`);
         } catch (error) {
-          console.error(`❌ Failed to initialize balance for ${employee.name}:`, error.message);
+          // console.error(`❌ Failed to initialize balance for ${employee.name}:`, error.message);
         }
       }
     }
@@ -676,7 +752,7 @@ const getTeamLeaveBalances = async (req, res) => {
         annual = totalAnnual;
         sick = totalSick;
         personal = totalPersonal;
-        console.log(`⚠️ Using defaults for ${employee.name}: Annual=${annual}, Sick=${sick}, Personal=${personal}`);
+        // console.log(`⚠️ Using defaults for ${employee.name}: Annual=${annual}, Sick=${sick}, Personal=${personal}`);
       }
       
       return {
@@ -704,7 +780,7 @@ const getTeamLeaveBalances = async (req, res) => {
       data: formattedBalances
     });
   } catch (error) {
-    console.error('Error fetching team leave balances:', error);
+    // console.error('Error fetching team leave balances:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch team leave balances',
@@ -825,7 +901,7 @@ const getTeamWellbeingTrends = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error fetching team wellbeing trends:', error);
+    // console.error('Error fetching team wellbeing trends:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch team wellbeing trends',
@@ -993,7 +1069,7 @@ const getTeamWellbeingData = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error fetching team wellbeing data:', error);
+    // console.error('Error fetching team wellbeing data:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch team wellbeing data',
@@ -1054,7 +1130,7 @@ const getAttendanceOverview = async (req, res) => {
       data: stats
     });
   } catch (error) {
-    console.error('Error fetching attendance overview:', error);
+    // console.error('Error fetching attendance overview:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch attendance overview',
@@ -1067,7 +1143,7 @@ const getAttendanceOverview = async (req, res) => {
 const validateAttendanceData = (attendanceRecords) => {
   return attendanceRecords.filter(record => {
     if (!record.employeeId) {
-      console.warn('Attendance record missing employee data:', record._id);
+      // console.warn('Attendance record missing employee data:', record._id);
       return false;
     }
     return true;
@@ -1080,7 +1156,7 @@ const formatAttendanceTime = (timeValue) => {
   try {
     return timeValue.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   } catch (error) {
-    console.warn('Error formatting time:', timeValue);
+    // console.warn('Error formatting time:', timeValue);
     return '-';
   }
 };
@@ -1093,7 +1169,7 @@ const calculateWorkHours = (workHours) => {
     const minutes = Math.round((workHours % 1) * 60);
     return `${hours}h ${minutes}m`;
   } catch (error) {
-    console.warn('Error calculating work hours:', workHours);
+    // console.warn('Error calculating work hours:', workHours);
     return '0h';
   }
 };

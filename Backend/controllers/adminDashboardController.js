@@ -5,6 +5,7 @@ const Attendance = require('../models/attendanceModel');
 const ManagerAttendance = require('../models/managerAttendanceModel');
 const Task = require('../models/Task');
 const Leave = require('../models/leaveModel');
+const ManagerLeave = require('../models/managerLeaveModel');
 const Reimbursement = require('../models/reimbursementModel');
 const EmployeeWellbeing = require('../models/employeeWellbeingModel');
 const ManagerWellbeing = require('../models/managerWellbeingModel');
@@ -26,23 +27,53 @@ const getDashboardMetrics = async (req, res) => {
     const attendanceStats = await userService.calculateAttendanceStats(firstDayOfMonth, lastDayOfMonth);
     const attendanceRate = attendanceStats.presentPercentage + attendanceStats.latePercentage;
 
-    // Get pending requests awaiting admin approval (leave + reimbursement)
-    const pendingLeaveRequests = await Leave.countDocuments({ 
+    // Get pending requests awaiting admin approval using same logic as leave-reimbursement service
+    // Get employee and manager IDs for role-based stats
+    const employees = await Employee.find({ role: 'employee' }).select('_id');
+    const managers = await Manager.find().select('_id');
+    const employeeIds = employees.map(emp => emp._id);
+    const managerIds = managers.map(mgr => mgr._id);
+
+    // Count pending requests properly (same as adminLeaveReimbursementService)
+    const pendingEmployeeLeaves = await Leave.countDocuments({ 
       currentApprovalLevel: 'admin', 
-      status: 'manager-approved'
+      status: 'manager-approved',
+      employeeId: { $in: employeeIds }
     });
-    const pendingReimbursementRequests = await Reimbursement.countDocuments({ 
+    
+    // Get manager leaves from both old system and new dedicated ManagerLeave collection
+    const pendingManagerLeavesOld = await Leave.countDocuments({ 
       currentApprovalLevel: 'admin', 
-      status: 'manager-approved'
+      status: 'manager-approved',
+      employeeId: { $in: managerIds }
     });
-    const pendingRequests = pendingLeaveRequests + pendingReimbursementRequests;
+
+    const pendingManagerLeavesNew = await ManagerLeave.countDocuments({ 
+      status: 'pending'
+    });
+
+    const pendingManagerLeaves = pendingManagerLeavesOld + pendingManagerLeavesNew;
+
+    const pendingEmployeeReimbursements = await Reimbursement.countDocuments({ 
+      currentApprovalLevel: 'admin', 
+      status: 'manager-approved',
+      employeeId: { $in: employeeIds }
+    });
+    
+    const pendingManagerReimbursements = await Reimbursement.countDocuments({ 
+      currentApprovalLevel: 'admin', 
+      status: 'manager-approved',
+      employeeId: { $in: managerIds }
+    });
+
+    const totalPendingRequests = pendingEmployeeLeaves + pendingManagerLeaves + pendingEmployeeReimbursements + pendingManagerReimbursements;
 
     res.status(200).json({
       success: true,
       data: {
         totalEmployees: total,
         attendanceRate: `${attendanceRate}%`,
-        pendingRequests: pendingRequests
+        pendingRequests: totalPendingRequests
       }
     });
   } catch (error) {

@@ -104,6 +104,7 @@ const requestLeave = asyncHandler(async (req, res) => {
   let leaveBalance = await LeaveBalance.findOne({ employeeId, year: currentYear });
 
   if (!leaveBalance) {
+    // console.log(`🔄 No existing balance found, initializing for user ${employeeId}`);
     leaveBalance = await LeaveBalance.initializeBalances(employeeId, currentYear);
   }
 
@@ -581,7 +582,7 @@ const getLeaveBalance = asyncHandler(async (req, res) => {
     let leaveBalance = await LeaveBalance.findOne({ employeeId, year: currentYear });
 
     if (!leaveBalance) {
-      console.log(`🔄 No existing balance found, initializing for user ${employeeId}`);
+      // console.log(`🔄 No existing balance found, initializing for user ${employeeId}`);
       leaveBalance = await LeaveBalance.initializeBalances(employeeId, currentYear);
     }
 
@@ -935,6 +936,92 @@ const adminBulkAction = asyncHandler(async (req, res) => {
   });
 });
 
+// @desc    Get leave dates for calendar display
+// @route   GET /api/leave/calendar
+// @access  Private (Employee/Manager)
+const getLeaveDatesForCalendar = asyncHandler(async (req, res) => {
+  try {
+    const employeeId = req.user._id;
+    const { year, month } = req.query;
+    
+    // Build query for approved leaves only
+    const query = { 
+      employeeId, 
+      status: 'approved' 
+    };
+    
+    // Filter by year if provided
+    if (year) {
+      const startOfYear = new Date(parseInt(year), 0, 1);
+      const endOfYear = new Date(parseInt(year), 11, 31, 23, 59, 59);
+      
+      query.$or = [
+        {
+          startDate: {
+            $gte: startOfYear,
+            $lte: endOfYear
+          }
+        },
+        {
+          endDate: {
+            $gte: startOfYear,
+            $lte: endOfYear
+          }
+        },
+        {
+          $and: [
+            { startDate: { $lte: startOfYear } },
+            { endDate: { $gte: endOfYear } }
+          ]
+        }
+      ];
+    }
+    
+    // Get approved leave requests
+    const leaves = await Leave.find(query).select('startDate endDate type');
+    
+    // Extract all dates from leave periods
+    const leaveDates = [];
+    
+    leaves.forEach(leave => {
+      const startDate = new Date(leave.startDate);
+      const endDate = new Date(leave.endDate);
+      
+      // Generate all dates between start and end date (inclusive)
+      for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+        // Filter by month if specified
+        if (month && d.getMonth() + 1 !== parseInt(month)) {
+          continue;
+        }
+        
+        // Filter by year if specified
+        if (year && d.getFullYear() !== parseInt(year)) {
+          continue;
+        }
+        
+        const dateString = d.toISOString().split('T')[0];
+        if (!leaveDates.includes(dateString)) {
+          leaveDates.push(dateString);
+        }
+      }
+    });
+    
+    res.status(200).json({
+      success: true,
+      data: leaveDates.sort(), // Sort dates chronologically
+      message: `Found ${leaveDates.length} leave dates`
+    });
+    
+  } catch (error) {
+    console.error('Error fetching leave calendar dates:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch leave calendar dates',
+      error: error.message
+    });
+  }
+});
+
 // Export all functions
 module.exports = {
   requestLeave,
@@ -948,6 +1035,7 @@ module.exports = {
   getLeaveBalance,
   resetLeaveBalance,
   getLeaveHistory,
+  getLeaveDatesForCalendar,
   getAdminPendingRequests,
   getAdminAllRequests,
   getAdminStats,

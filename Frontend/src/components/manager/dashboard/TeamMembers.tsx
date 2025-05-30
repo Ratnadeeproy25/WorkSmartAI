@@ -157,9 +157,30 @@ const TeamMembers: React.FC<TeamMembersProps> = ({ teamMembers, loading }) => {
       
       {displayMembers.length === 0 ? (
         <div className="text-center py-8">
-          <div className="text-gray-500 mb-2">No team members found</div>
+          <div className="text-gray-500 mb-2">
+            <i className="bi bi-people text-4xl mb-4 block"></i>
+            {loading ? 'Loading team members...' : 'No team members found'}
+          </div>
           <div className="text-sm text-gray-400">
-            {teamMembers ? 'No employees are assigned to you yet.' : 'Unable to load team data.'}
+            {loading ? (
+              'Please wait while we fetch your team data...'
+            ) : teamMembers ? (
+              <>
+                No employees are assigned to you yet.
+                <br />
+                <span className="text-xs mt-2 block">
+                  Contact your administrator to assign team members to your account.
+                </span>
+              </>
+            ) : (
+              <>
+                Unable to load team data at this time.
+                <br />
+                <span className="text-xs mt-2 block">
+                  Please refresh the page or contact support if the issue persists.
+                </span>
+              </>
+            )}
           </div>
         </div>
       ) : (

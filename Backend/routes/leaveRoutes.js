@@ -12,12 +12,14 @@ const {
   cancelLeave,
   getLeaveBalance,
   resetLeaveBalance,
-  getLeaveHistory
+  getLeaveHistory,
+  getLeaveDatesForCalendar
 } = require('../controllers/leaveController');
 
 // Employee and Manager routes - both can submit requests
 router.post('/request', protect, restrict('employee', 'manager'), requestLeave);
 router.get('/', protect, getLeaveRequests);
+router.get('/calendar', protect, getLeaveDatesForCalendar);
 router.get('/balance', protect, restrict('employee', 'manager'), getLeaveBalance);
 router.post('/balance/reset', protect, restrict('employee', 'manager'), resetLeaveBalance);
 router.get('/history', protect, getLeaveHistory);

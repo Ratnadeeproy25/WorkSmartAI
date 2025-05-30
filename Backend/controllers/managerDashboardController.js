@@ -11,25 +11,60 @@ const EmployeeWellbeing = require('../models/employeeWellbeingModel');
  */
 exports.getManagerDashboardData = async (req, res) => {
   try {
+    // console.log('🔍 Manager Dashboard Request - User ID:', req.user._id, 'Custom ID:', req.user.id);
+    
     const managerId = req.user._id; // Get manager ID from authenticated user
     const managerCustomId = req.user.id; // Custom ID like MG001
 
-    // Get manager details
-    const manager = await Manager.findById(managerId);
+    // console.log('📋 Looking for manager with ID:', managerId);
+
+    // Get manager details - check both Manager collection and Employee collection
+    let manager = await Manager.findById(managerId);
+    // console.log('🏢 Manager from Manager collection:', manager ? 'Found' : 'Not found');
+    
     if (!manager) {
+      // Try to find in Employee collection with manager role
+      manager = await Employee.findOne({ 
+        _id: managerId,
+        role: 'manager'
+      });
+      // console.log('👤 Manager from Employee collection:', manager ? 'Found' : 'Not found');
+    }
+    
+    if (!manager) {
+      // console.error('❌ Manager not found in either collection');
       return res.status(404).json({
         success: false,
         message: 'Manager not found'
       });
     }
 
+    // console.log('✅ Manager found:', manager.name, 'Department:', manager.department);
+
     // Get all employees assigned to this manager
     const teamMembers = await Employee.find({ manager: managerId })
       .select('id name email position status profilePicture updatedAt performanceData')
       .lean();
 
+    // console.log(`👥 Found ${teamMembers.length} team members assigned to manager ${managerId}`);
+    
+    if (teamMembers.length === 0) {
+      // console.log('⚠️ No employees assigned to this manager');
+      // Also check if employees are assigned by manager's custom ID
+      const alternativeTeamMembers = await Employee.find({ manager: managerCustomId })
+        .select('id name email position status profilePicture updatedAt performanceData')
+        .lean();
+      
+      // console.log(`🔄 Alternative search by custom ID found ${alternativeTeamMembers.length} team members`);
+      
+      if (alternativeTeamMembers.length > 0) {
+        teamMembers.push(...alternativeTeamMembers);
+      }
+    }
+
     // Calculate metrics
     const metrics = await calculateDashboardMetrics(managerId, teamMembers);
+    // console.log('📊 Calculated metrics:', metrics);
 
     // Get chart data
     const chartData = await getChartData(managerId, teamMembers);
@@ -42,6 +77,8 @@ exports.getManagerDashboardData = async (req, res) => {
     .limit(10)
     .lean();
 
+    // console.log(`📝 Found ${recentTasks.length} recent tasks`);
+
     // Get pending requests (leave and reimbursement)
     const pendingLeaves = await Leave.find({
       employeeId: { $in: teamMembers.map(emp => emp._id) },
@@ -53,25 +90,35 @@ exports.getManagerDashboardData = async (req, res) => {
       status: 'pending'
     }).countDocuments();
 
+    // console.log(`📋 Pending requests - Leaves: ${pendingLeaves}, Reimbursements: ${pendingReimbursements}`);
+
+    // Format team members data
+    const formattedTeamMembers = await formatTeamMembers(teamMembers);
+    // console.log(`👥 Formatted ${formattedTeamMembers.length} team members`);
+
+    const responseData = {
+      manager: {
+        name: manager.name,
+        department: manager.department,
+        position: manager.position
+      },
+      metrics: {
+        ...metrics,
+        pendingRequests: pendingLeaves + pendingReimbursements
+      },
+      chartData,
+      teamMembers: formattedTeamMembers,
+      recentTasks
+    };
+
+    // console.log('✅ Sending dashboard response with team members count:', responseData.teamMembers.length);
+
     return res.status(200).json({
       success: true,
-      data: {
-        manager: {
-          name: manager.name,
-          department: manager.department,
-          position: manager.position
-        },
-        metrics: {
-          ...metrics,
-          pendingRequests: pendingLeaves + pendingReimbursements
-        },
-        chartData,
-        teamMembers: await formatTeamMembers(teamMembers),
-        recentTasks
-      }
+      data: responseData
     });
   } catch (error) {
-    console.error('Error getting manager dashboard data:', error);
+    console.error('❌ Error getting manager dashboard data:', error);
     return res.status(500).json({
       success: false,
       message: 'Error getting dashboard data',

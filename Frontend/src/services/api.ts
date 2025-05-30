@@ -1,14 +1,58 @@
-import axios from 'axios';
+import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import { getAuthHeaders, getManagerAuthHeaders, getEmployeeAuthHeaders, getAdminAuthHeaders } from './authService';
+
+// Request queue to limit concurrent requests
+class RequestQueue {
+  private queue: Array<() => Promise<any>> = [];
+  private activeRequests = 0;
+  private maxConcurrentRequests = 3; // Limit to 3 concurrent requests
+  private requestDelay = 100; // 100ms delay between requests
+
+  async add<T>(requestFn: () => Promise<T>): Promise<T> {
+    return new Promise((resolve, reject) => {
+      this.queue.push(async () => {
+        try {
+          this.activeRequests++;
+          
+          // Add delay to prevent overwhelming the server
+          if (this.activeRequests > 1) {
+            await new Promise(r => setTimeout(r, this.requestDelay));
+          }
+          
+          const result = await requestFn();
+          resolve(result);
+        } catch (error) {
+          reject(error);
+        } finally {
+          this.activeRequests--;
+          this.processQueue();
+        }
+      });
+      
+      this.processQueue();
+    });
+  }
+
+  private processQueue() {
+    if (this.activeRequests < this.maxConcurrentRequests && this.queue.length > 0) {
+      const nextRequest = this.queue.shift();
+      if (nextRequest) {
+        nextRequest();
+      }
+    }
+  }
+}
+
+const requestQueue = new RequestQueue();
 
 // Create an axios instance with base URL and default headers
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api',
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   },
-  timeout: 15000, // 15 seconds default timeout
+  timeout: 10000, // 10 second timeout
   withCredentials: true, // Important for CORS with credentials
 });
 
@@ -98,10 +142,17 @@ api.interceptors.request.use(
     if (headers.Authorization && config.headers) {
       config.headers.Authorization = headers.Authorization;
     }
+
+    // Add authentication token
+    const token = localStorage.getItem('employeeToken') || localStorage.getItem('authToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
     return config;
   },
   (error) => {
-    console.error('Request interceptor error:', error);
+    // console.error('Request interceptor error:', error);
     return Promise.reject(error);
   }
 );
@@ -114,7 +165,7 @@ api.interceptors.response.use(
   (error) => {
     // Handle network errors
     if (error.code === 'ECONNABORTED') {
-      console.error('Request timeout - server took too long to respond');
+      // console.error('Request timeout - server took too long to respond');
       return Promise.reject({
         status: 408,
         message: 'Request timeout - server took too long to respond'
@@ -123,7 +174,7 @@ api.interceptors.response.use(
     
     // Handle CORS errors
     if (error.message && error.message.includes('Network Error')) {
-      console.error('Network Error - Possible CORS issue or server unavailable');
+      // console.error('Network Error - Possible CORS issue or server unavailable');
       return Promise.reject({
         status: 0,
         message: 'Network Error - Unable to connect to server. Please check your connection.'
@@ -132,15 +183,23 @@ api.interceptors.response.use(
     
     // Handle authentication errors
     if (error.response && error.response.status === 401) {
-      // Optional: Redirect to login or clear token
-      // window.location.href = '/login';
-      // localStorage.removeItem('userData');
-      console.error('Authentication error:', error.response.data.message || 'Authentication failed');
+      // Token expired or invalid
+      localStorage.removeItem('employeeToken');
+      localStorage.removeItem('employeeUserData');
+      localStorage.removeItem('authToken');
+      
+      // Only redirect if not already on login page
+      if (!window.location.pathname.includes('/login')) {
+        window.location.href = '/employee/login';
+      }
+    } else if (error.response && error.response.status === 429) {
+      // Rate limit exceeded
+      // console.warn('Rate limit exceeded, requests are being throttled');
     }
     
     // Handle permission errors (403 Forbidden)
     if (error.response && error.response.status === 403) {
-      console.error('Permission error:', error.response.data.message || 'You do not have permission to access this resource');
+      // console.error('Permission error:', error.response.data.message || 'You do not have permission to access this resource');
       return Promise.reject({
         status: 403,
         message: error.response.data.message || 'Access denied. You do not have permission to access this resource.',
@@ -159,4 +218,27 @@ api.interceptors.response.use(
   }
 );
 
-export default api; 
+// Wrapper methods that use the request queue
+const queuedApi = {
+  get: <T = any>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => {
+    return requestQueue.add(() => api.get<T>(url, config));
+  },
+  
+  post: <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => {
+    return requestQueue.add(() => api.post<T>(url, data, config));
+  },
+  
+  put: <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => {
+    return requestQueue.add(() => api.put<T>(url, data, config));
+  },
+  
+  delete: <T = any>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => {
+    return requestQueue.add(() => api.delete<T>(url, config));
+  },
+  
+  patch: <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => {
+    return requestQueue.add(() => api.patch<T>(url, data, config));
+  }
+};
+
+export default queuedApi; 

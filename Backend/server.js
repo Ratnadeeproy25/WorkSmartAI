@@ -82,14 +82,35 @@ app.use('/api', rateLimit(1000, 15 * 60 * 1000)); // 1000 requests per 15 minute
 app.use(express.json({ limit: '2mb' }));  // Reduced payload limit for security
 app.use(
   cors({
-    origin: process.env.NODE_ENV === 'production' 
-      ? process.env.FRONTEND_URL || "https://your-domain.com"
-      : "http://localhost:3000",
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+      
+      // Define allowed origins
+      const allowedOrigins = [
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+        'http://localhost:3001',
+        'http://127.0.0.1:3001'
+      ];
+      
+      // In production, use environment variable
+      if (process.env.NODE_ENV === 'production' && process.env.FRONTEND_URL) {
+        allowedOrigins.push(process.env.FRONTEND_URL);
+      }
+      
+      if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'role'],
+    exposedHeaders: ['Content-Range', 'X-Content-Range'],
     preflightContinue: false,
-    optionsSuccessStatus: 204
+    optionsSuccessStatus: 200
   })
 );
 
@@ -146,7 +167,7 @@ const startServer = async () => {
     app.listen(PORT, () => {
       console.log(`Server is running at port: ${PORT}`);
       console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-      console.log("✅ All backend endpoints are now properly implemented!");
+      // console.log("✅ All backend endpoints are now properly implemented!");
     });
   } catch (error) {
     console.error("Error starting server:", error.message);

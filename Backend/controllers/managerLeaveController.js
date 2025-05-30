@@ -206,7 +206,7 @@ const adminManagerLeaveAction = asyncHandler(async (req, res) => {
       }
       
       await leaveBalanceService.deductLeaveBalance(managerLeave.managerId._id, managerLeave.type, managerLeave.totalDays);
-      console.log(`✅ Manager leave balance updated: ${managerLeave.totalDays} days deducted from ${managerLeave.type} leave for manager ${managerLeave.managerId.name}`);
+      // console.log(`✅ Manager leave balance updated: ${managerLeave.totalDays} days deducted from ${managerLeave.type} leave for manager ${managerLeave.managerId.name}`);
     } catch (balanceError) {
       console.error('❌ Error updating manager leave balance:', balanceError);
       // Don't fail the approval process due to balance update issues

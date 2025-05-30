@@ -15,7 +15,7 @@ interface ApiResponse<T> {
 
 // Improved error handling helper
 const handleApiError = (error: any, defaultMessage: string) => {
-  console.error(defaultMessage, error);
+  // console.error(defaultMessage, error);
   
   // Check if it's a "Manager not found" error
   if (error.response && error.response.data) {

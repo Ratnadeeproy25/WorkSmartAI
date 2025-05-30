@@ -74,7 +74,7 @@ export const requestLeave = async (
       createdAt: response.data.data.createdAt
     };
   } catch (error: any) {
-    console.error('Error requesting leave:', error);
+    // console.error('Error requesting leave:', error);
     
     // Format error message for better user experience
     let errorMessage = 'Failed to submit leave request';
@@ -122,7 +122,7 @@ export const getLeaveRequests = async (
       createdAt: leave.createdAt
     }));
   } catch (error) {
-    console.error('Error getting leave requests:', error);
+    // console.error('Error getting leave requests:', error);
     throw error;
   }
 };
@@ -145,7 +145,7 @@ export const getLeaveById = async (id: string): Promise<EmployeeLeaveRequest> =>
       createdAt: leave.createdAt
     };
   } catch (error) {
-    console.error('Error getting leave request:', error);
+    // console.error('Error getting leave request:', error);
     throw error;
   }
 };
@@ -155,7 +155,7 @@ export const cancelLeave = async (id: string): Promise<void> => {
   try {
     await api.put<ApiResponse<null>>(`${BASE_URL}/${id}/cancel`);
   } catch (error) {
-    console.error('Error cancelling leave request:', error);
+    // console.error('Error cancelling leave request:', error);
     throw error;
   }
 };
@@ -168,26 +168,89 @@ export const getLeaveBalance = async (year?: number): Promise<LeaveBalance[]> =>
     });
     return response.data.data;
   } catch (error) {
-    console.error('Error getting leave balance:', error);
+    // console.error('Error getting leave balance:', error);
     throw error;
   }
 };
 
 // Get leave dates for calendar
+let lastCalendarCall = 0;
+let calendarCache: { [key: string]: { data: string[], timestamp: number } } = {};
+const CALENDAR_CALL_THROTTLE = 2000; // 2 seconds between calls
+const CALENDAR_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
 export const getLeaveDates = async (
   year?: number,
   month?: number
 ): Promise<string[]> => {
   try {
+    const currentYear = year || new Date().getFullYear();
+    const cacheKey = `${currentYear}-${month || 'all'}`;
+    
+    // Check cache first
+    const cachedData = calendarCache[cacheKey];
+    if (cachedData && Date.now() - cachedData.timestamp < CALENDAR_CACHE_DURATION) {
+      // console.log('Using cached leave dates for', cacheKey);
+      return cachedData.data;
+    }
+    
+    // Throttle API calls
+    const now = Date.now();
+    const timeSinceLastCall = now - lastCalendarCall;
+    
+    if (timeSinceLastCall < CALENDAR_CALL_THROTTLE) {
+      const waitTime = CALENDAR_CALL_THROTTLE - timeSinceLastCall;
+      // console.log(`Throttling calendar API call, waiting ${waitTime}ms`);
+      await new Promise(resolve => setTimeout(resolve, waitTime));
+    }
+    
+    lastCalendarCall = Date.now();
+    
+    // Use the proper calendar endpoint
+    // console.log(`Fetching leave calendar dates for year: ${currentYear}, month: ${month || 'all'}`);
     const response = await api.get<ApiResponse<string[]>>(`${BASE_URL}/calendar`, {
       params: { 
-        year: year || new Date().getFullYear(),
+        year: currentYear,
         month: month
       },
+      timeout: 8000 // 8 second timeout
     });
+    
+    // Cache the result
+    calendarCache[cacheKey] = {
+      data: response.data.data,
+      timestamp: Date.now()
+    };
+    
+    // Clean up old cache entries
+    const cacheKeys = Object.keys(calendarCache);
+    if (cacheKeys.length > 10) {
+      const oldestKey = cacheKeys.reduce((oldest, key) => 
+        calendarCache[key].timestamp < calendarCache[oldest].timestamp ? key : oldest
+      );
+      delete calendarCache[oldestKey];
+    }
+    
+    // console.log(`Found ${response.data.data.length} leave dates for ${cacheKey}`);
     return response.data.data;
-  } catch (error) {
-    console.error('Error getting leave dates:', error);
+  } catch (error: any) {
+    // console.error('Error getting leave dates:', error);
+    
+    // Provide specific error handling
+    if (error.code === 'ECONNABORTED') {
+      throw new Error('Request timed out. The server may be overloaded.');
+    } else if (error.response?.status === 429) {
+      throw new Error('Too many requests. Please wait before trying again.');
+    } else if (error.response?.status === 404) {
+      // Return empty array for 404s instead of throwing error
+      // console.warn('Leave calendar endpoint returned 404, returning empty calendar');
+      return [];
+    } else if (error.response?.status === 401) {
+      throw new Error('Authentication failed. Please log in again.');
+    } else if (error.response?.status === 403) {
+      throw new Error('Access denied. You don\'t have permission to view leave calendar.');
+    }
+    
     throw error;
   }
 };
@@ -198,7 +261,7 @@ export const resetLeaveBalance = async (): Promise<LeaveBalance[]> => {
     const response = await api.post<ApiResponse<LeaveBalance[]>>(`${BASE_URL}/balance/reset`);
     return response.data.data;
   } catch (error) {
-    console.error('Error resetting leave balance:', error);
+    // console.error('Error resetting leave balance:', error);
     throw error;
   }
 };

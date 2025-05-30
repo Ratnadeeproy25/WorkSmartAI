@@ -3,7 +3,7 @@ import { LeaveRequest, ReimbursementRequest, RequestStatus } from './types';
 
 interface RequestCardProps {
   request: LeaveRequest | ReimbursementRequest;
-  type: 'leave' | 'reimbursement' | 'all';
+  type: 'leave' | 'reimbursement' | 'manager-leave' | 'all';
   onApprove: (id: string) => void;
   onReject: (id: string) => void;
   onRevoke?: (id: string) => void;
@@ -39,7 +39,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
   onRevoke,
   disabled = false
 }) => {
-  const isLeaveRequest = request.requestType === 'leave' || type === 'leave';
+  const isLeaveRequest = request.requestType === 'leave' || request.requestType === 'manager-leave' || type === 'leave' || type === 'manager-leave';
   const isReimbursementRequest = request.requestType === 'reimbursement' || type === 'reimbursement';
   
   const statusClasses = {

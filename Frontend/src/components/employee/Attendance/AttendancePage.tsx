@@ -25,12 +25,24 @@ const AttendancePage: React.FC = () => {
   const [workTimer, setWorkTimer] = useState<NodeJS.Timeout | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [leaveDates, setLeaveDates] = useState<Set<string>>(new Set());
+  const [approvedLeaveDates, setApprovedLeaveDates] = useState<Set<string>>(new Set());
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [attendanceStats, setAttendanceStats] = useState<AttendanceStats | undefined>(undefined);
   const [employeeProfile, setEmployeeProfile] = useState<Employee | null>(null);
   const [isLocationWithinWorkArea, setIsLocationWithinWorkArea] = useState<boolean>(false);
   const [attendanceData, setAttendanceData] = useState<AttendanceRecord | null>(null);
   const [weeklyHours, setWeeklyHours] = useState<WeeklyHours[]>([]);
+  
+  // Add loading states to prevent multiple simultaneous API calls
+  const [isLoadingAttendance, setIsLoadingAttendance] = useState<boolean>(false);
+  const [isCheckingIn, setIsCheckingIn] = useState<boolean>(false);
+  const [isCheckingOut, setIsCheckingOut] = useState<boolean>(false);
+
+  // Use ref to store timer functions to avoid dependency issues
+  const timerRef = useRef<{
+    startWorkTimer: (startTime: Date) => void;
+    stopWorkTimer: () => void;
+  }>();
 
   // Load the current employee
   useEffect(() => {
@@ -49,11 +61,11 @@ const AttendancePage: React.FC = () => {
   // Get current status based on check-in/out times and leave dates
   const getCurrentStatus = useCallback((): AttendanceStatus => {
     const today = new Date().toISOString().split('T')[0];
-    if (leaveDates.has(today)) return 'leave';
+    if (approvedLeaveDates.has(today)) return 'leave';
     if (!checkInTime) return 'absent';
     if (checkOutTime) return 'present';
     return 'present';
-  }, [checkInTime, checkOutTime, leaveDates]);
+  }, [checkInTime, checkOutTime, approvedLeaveDates]);
 
   // Memoize location update function
   const updateLocationStatus = useCallback((location: LocationData) => {
@@ -99,33 +111,115 @@ const AttendancePage: React.FC = () => {
     }
   }, [updateLocationStatus, employeeProfile]);
 
-  // Memoize work timer functions
-  const startWorkTimer = useCallback((startTime: Date) => {
-    if (workTimer) {
-      clearInterval(workTimer);
-    }
-    
-    const timer = setInterval(() => {
-      const now = new Date();
-      const hoursWorked = (now.getTime() - startTime.getTime()) / (1000 * 60 * 60);
-      setHoursWorked(hoursWorked.toFixed(2));
-    }, 1000);
-    
-    setWorkTimer(timer);
+  // Initialize timer functions in ref to avoid dependency issues
+  useEffect(() => {
+    const startWorkTimer = (startTime: Date) => {
+      if (workTimer) {
+        clearInterval(workTimer);
+      }
+      
+      const timer = setInterval(() => {
+        const now = new Date();
+        const hoursWorked = (now.getTime() - startTime.getTime()) / (1000 * 60 * 60);
+        setHoursWorked(hoursWorked.toFixed(2));
+      }, 1000);
+      
+      setWorkTimer(timer);
+    };
+
+    const stopWorkTimer = () => {
+      if (workTimer) {
+        clearInterval(workTimer);
+        setWorkTimer(null);
+      }
+    };
+
+    timerRef.current = { startWorkTimer, stopWorkTimer };
   }, [workTimer]);
 
-  const stopWorkTimer = useCallback(() => {
-    if (workTimer) {
-      clearInterval(workTimer);
-      setWorkTimer(null);
-    }
-  }, [workTimer]);
+  // Circuit breaker for API calls
+  const circuitBreaker = useRef({
+    isOpen: false,
+    failureCount: 0,
+    lastFailureTime: 0,
+    threshold: 3, // Open circuit after 3 failures
+    timeout: 30000 // Keep circuit open for 30 seconds
+  });
 
-  // Load attendance data
+  const checkCircuitBreaker = useCallback(() => {
+    const breaker = circuitBreaker.current;
+    
+    if (breaker.isOpen) {
+      const timeSinceLastFailure = Date.now() - breaker.lastFailureTime;
+      if (timeSinceLastFailure > breaker.timeout) {
+        // Reset circuit breaker
+        breaker.isOpen = false;
+        breaker.failureCount = 0;
+        console.log('Circuit breaker reset');
+      } else {
+        throw new Error('Service temporarily unavailable. Please try again in a few moments.');
+      }
+    }
+  }, []);
+
+  const recordFailure = useCallback(() => {
+    const breaker = circuitBreaker.current;
+    breaker.failureCount++;
+    breaker.lastFailureTime = Date.now();
+    
+    if (breaker.failureCount >= breaker.threshold) {
+      breaker.isOpen = true;
+      console.log('Circuit breaker opened due to repeated failures');
+    }
+  }, []);
+
+  const recordSuccess = useCallback(() => {
+    const breaker = circuitBreaker.current;
+    if (breaker.failureCount > 0) {
+      breaker.failureCount = 0;
+      console.log('Circuit breaker failure count reset');
+    }
+  }, []);
+
+  // Memoize notification system
+  const showNotification = useCallback((message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    const notification = document.createElement('div');
+    notification.className = `fixed bottom-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
+      type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+    } text-white max-w-sm`;
+    notification.innerHTML = `
+      <div class="flex items-start gap-2">
+        <i class="bi bi-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : 'info-circle'} mt-0.5"></i>
+        <div class="flex-1">${message}</div>
+        <button onclick="this.parentElement.parentElement.remove()" class="ml-2 text-white hover:text-gray-200">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+    `;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.remove();
+      }
+    }, 5000);
+  }, []);
+
+  // Load attendance data with proper loading state management
   const loadAttendanceData = useCallback(async () => {
-    setError(null); // Clear previous errors
-    
+    // Prevent multiple simultaneous calls
+    if (isLoadingAttendance) {
+      console.log('Attendance data already loading, skipping...');
+      return;
+    }
+
     try {
+      // Check circuit breaker before making requests
+      checkCircuitBreaker();
+
+      setIsLoadingAttendance(true);
+      setError(null); // Clear previous errors
+      
       // Check if user is logged in first
       if (!isLoggedIn) {
         setError('Please log in to view attendance data');
@@ -139,54 +233,86 @@ const AttendancePage: React.FC = () => {
       }
       
       // Load today's attendance with better error handling
-      const attendanceData = await attendanceService.getTodayAttendance();
-      
-      if (attendanceData) {
-        if (attendanceData.checkIn) {
-          const checkInDate = new Date(attendanceData.checkIn);
-          setCheckInTime(checkInDate);
-          
-          if (!attendanceData.checkOut) {
-            // Still checked in, start timer
-            startWorkTimer(checkInDate);
-          } else {
-            // Already checked out
-            const checkOutDate = new Date(attendanceData.checkOut);
-            setCheckOutTime(checkOutDate);
-            setHoursWorked(attendanceData.workHours?.toFixed(2) || '0.00');
+      try {
+        const attendanceData = await attendanceService.getTodayAttendance();
+        
+        if (attendanceData) {
+          if (attendanceData.checkIn) {
+            const checkInDate = new Date(attendanceData.checkIn);
+            setCheckInTime(checkInDate);
+            
+            if (!attendanceData.checkOut) {
+              // Still checked in, start timer
+              timerRef.current?.startWorkTimer(checkInDate);
+            } else {
+              // Already checked out
+              const checkOutDate = new Date(attendanceData.checkOut);
+              setCheckOutTime(checkOutDate);
+              setHoursWorked(attendanceData.workHours?.toFixed(2) || '0.00');
+            }
           }
+        }
+        recordSuccess(); // Record successful API call
+      } catch (attendanceError: any) {
+        console.error('Error loading today\'s attendance:', attendanceError);
+        recordFailure();
+        
+        // Don't fail the entire process for attendance data
+        if (attendanceError.response?.status !== 401 && attendanceError.response?.status !== 403) {
+          showNotification('Failed to load today\'s attendance data', 'error');
         }
       }
       
-      // Load leave dates with error handling
+      // Load leave dates with error handling - but don't fail the whole process
       try {
-      const leaveDatesList = await leaveService.getLeaveDates();
-      setLeaveDates(new Set(leaveDatesList));
+        const leaveDatesList = await leaveService.getLeaveDates();
+        setApprovedLeaveDates(new Set(leaveDatesList));
+        recordSuccess(); // Record successful API call
       } catch (leaveError: any) {
         console.error('Error loading leave dates:', leaveError);
+        recordFailure();
+        
         // Don't fail the whole process for leave dates
-        setLeaveDates(new Set()); // Set empty set as fallback
+        setApprovedLeaveDates(new Set()); // Set empty set as fallback
+        
+        // Only show notification for unexpected errors (not 404, auth issues)
+        if (leaveError.response?.status !== 404 && 
+            leaveError.response?.status !== 401 && 
+            leaveError.response?.status !== 403 &&
+            !leaveError.message?.includes('Access denied') &&
+            !leaveError.message?.includes('Authentication failed')) {
+          showNotification('Failed to load leave calendar', 'error');
+        } else {
+          console.log('Leave calendar not available or accessible, continuing without it');
+        }
       }
       
-      // Load attendance stats with error handling
+      // Load attendance stats with error handling - but don't fail the whole process
       try {
-      const { weeklyHours: hours, attendanceStats: stats } = await attendanceService.getAttendanceStats();
-      setWeeklyHours(hours);
-      setAttendanceStats(stats);
+        const { weeklyHours: hours, attendanceStats: stats } = await attendanceService.getAttendanceStats();
+        setWeeklyHours(hours);
+        setAttendanceStats(stats);
+        recordSuccess(); // Record successful API call
       } catch (statsError: any) {
         console.error('Error loading attendance stats:', statsError);
+        recordFailure();
+        
         // Don't fail the whole process for stats
         setWeeklyHours([]);
         setAttendanceStats(undefined);
+        showNotification('Failed to load attendance statistics', 'error');
       }
       
     } catch (err: any) {
       console.error('Error loading attendance data:', err);
+      recordFailure();
       
       // Provide specific error messages based on error type
       let errorMessage = 'Failed to load attendance data';
       
-      if (err.status === 401) {
+      if (err.message === 'Service temporarily unavailable. Please try again in a few moments.') {
+        errorMessage = err.message;
+      } else if (err.status === 401) {
         errorMessage = 'Session expired. Please log in again.';
       } else if (err.status === 403) {
         errorMessage = 'Access denied. You don\'t have permission to view attendance data.';
@@ -194,16 +320,22 @@ const AttendancePage: React.FC = () => {
         errorMessage = 'Unable to connect to server. Please check your internet connection.';
       } else if (err.status === 408 || err.message?.includes('timeout')) {
         errorMessage = 'Request timed out. Please try again.';
+      } else if (err.status === 429) {
+        errorMessage = 'Too many requests. Please wait a moment before trying again.';
       } else if (err.message) {
         errorMessage = err.message;
       }
       
       setError(errorMessage);
+    } finally {
+      setIsLoadingAttendance(false);
     }
-  }, [startWorkTimer, isLoggedIn, employee]);
+  }, [isLoggedIn, employee, isLoadingAttendance, checkCircuitBreaker, recordSuccess, recordFailure, showNotification]);
 
-  // Memoize check-in handler
+  // Memoize check-in handler with loading state
   const handleCheckIn = useCallback(async () => {
+    if (isCheckingIn) return; // Prevent multiple simultaneous check-ins
+    
     if (!isLoggedIn) {
       setError('Please log in first');
       return;
@@ -220,6 +352,12 @@ const AttendancePage: React.FC = () => {
     }
     
     try {
+      // Check circuit breaker before making requests
+      checkCircuitBreaker();
+      
+      setIsCheckingIn(true);
+      setError(null); // Clear any previous errors
+      
       // Call check-in API
       await attendanceService.checkIn(currentLocation);
       
@@ -227,16 +365,36 @@ const AttendancePage: React.FC = () => {
       setCheckInTime(now);
       
       // Start work timer
-      startWorkTimer(now);
+      timerRef.current?.startWorkTimer(now);
       
+      recordSuccess(); // Record successful API call
       showNotification('Checked in successfully', 'success');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to check in');
+      recordFailure();
+      
+      let errorMessage = 'Failed to check in';
+      
+      if (err.message === 'Service temporarily unavailable. Please try again in a few moments.') {
+        errorMessage = err.message;
+      } else if (err.response?.status === 429) {
+        errorMessage = 'Too many requests. Please wait before trying again.';
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      setError(errorMessage);
+      showNotification(errorMessage, 'error');
+    } finally {
+      setIsCheckingIn(false);
     }
-  }, [currentLocation, startWorkTimer, isLoggedIn, employeeProfile, isLocationWithinWorkArea]);
+  }, [currentLocation, isLoggedIn, employeeProfile, isLocationWithinWorkArea, isCheckingIn, checkCircuitBreaker, recordSuccess, recordFailure, showNotification]);
 
-  // Memoize check-out handler
+  // Memoize check-out handler with loading state
   const handleCheckOut = useCallback(async () => {
+    if (isCheckingOut) return; // Prevent multiple simultaneous check-outs
+    
     if (!isLoggedIn) {
       setError('Please log in first');
       return;
@@ -253,6 +411,12 @@ const AttendancePage: React.FC = () => {
     }
 
     try {
+      // Check circuit breaker before making requests
+      checkCircuitBreaker();
+      
+      setIsCheckingOut(true);
+      setError(null); // Clear any previous errors
+      
       // Call check-out API
       const attendanceData = await attendanceService.checkOut(currentLocation);
       
@@ -265,38 +429,51 @@ const AttendancePage: React.FC = () => {
       }
       
       // Stop work timer
-      stopWorkTimer();
+      timerRef.current?.stopWorkTimer();
       
+      recordSuccess(); // Record successful API call
       showNotification('Checked out successfully', 'success');
       
-      // Refresh stats
-      const { weeklyHours: hours, attendanceStats: stats } = await attendanceService.getAttendanceStats();
-      setWeeklyHours(hours);
-      setAttendanceStats(stats);
+      // Refresh stats after a brief delay to avoid overwhelming the server
+      setTimeout(async () => {
+        try {
+          const { weeklyHours: hours, attendanceStats: stats } = await attendanceService.getAttendanceStats();
+          setWeeklyHours(hours);
+          setAttendanceStats(stats);
+          recordSuccess();
+        } catch (err) {
+          console.error('Error refreshing stats after check-out:', err);
+          recordFailure();
+          // Don't show error for stats refresh failure
+        }
+      }, 2000); // Increased delay to 2 seconds
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to check out');
+      recordFailure();
+      
+      let errorMessage = 'Failed to check out';
+      
+      if (err.message === 'Service temporarily unavailable. Please try again in a few moments.') {
+        errorMessage = err.message;
+      } else if (err.response?.status === 429) {
+        errorMessage = 'Too many requests. Please wait before trying again.';
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      setError(errorMessage);
+      showNotification(errorMessage, 'error');
+    } finally {
+      setIsCheckingOut(false);
     }
-  }, [checkInTime, currentLocation, stopWorkTimer, isLoggedIn]);
+  }, [checkInTime, currentLocation, isLoggedIn, isCheckingOut, checkCircuitBreaker, recordSuccess, recordFailure, showNotification]);
 
   // Handle leave dates change
   const handleLeaveDatesChange = useCallback(async (dates: Set<string>) => {
     setLeaveDates(dates);
     // Note: This is a UI-only feature for now 
     // In a full implementation, this would call an API to request leave
-  }, []);
-
-  // Memoize notification system
-  const showNotification = useCallback((message: string, type: 'success' | 'error' | 'info' = 'info') => {
-    const notification = document.createElement('div');
-    notification.className = `fixed bottom-4 right-4 p-4 rounded-lg shadow-lg ${
-      type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500'
-    } text-white`;
-    notification.textContent = message;
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-      notification.remove();
-    }, 3000);
   }, []);
 
   // Initialize
@@ -306,17 +483,24 @@ const AttendancePage: React.FC = () => {
 
   // Load attendance data only after employee is confirmed to be logged in
   useEffect(() => {
-    // Only load attendance data if logged in and employee data exists
-    if (isLoggedIn && employee) {
-      loadAttendanceData();
-    } else if (isLoggedIn && !employee) {
-      setError('Employee data not found. Please refresh the page or log in again.');
+    let mounted = true; // Track if component is still mounted
+    
+    const loadDataSafely = async () => {
+      // Only load attendance data if logged in and employee data exists
+      if (isLoggedIn && employee && mounted) {
+        await loadAttendanceData();
+      } else if (isLoggedIn && !employee && mounted) {
+        setError('Employee data not found. Please refresh the page or log in again.');
       }
-      
-      return () => {
-        stopWorkTimer();
-      };
-  }, [loadAttendanceData, stopWorkTimer, isLoggedIn, employee]);
+    };
+
+    loadDataSafely();
+    
+    return () => {
+      mounted = false;
+      timerRef.current?.stopWorkTimer();
+    };
+  }, [isLoggedIn, employee]); // Remove loadAttendanceData from dependencies to prevent infinite loop
 
   // Update location check when location or profile changes
   useEffect(() => {
@@ -339,22 +523,40 @@ const AttendancePage: React.FC = () => {
                 <div className="flex-1">
                   <h4 className="font-semibold mb-2 flex items-center gap-2">
                     <i className="bi bi-exclamation-triangle"></i>
-                    Attendance Data Error
+                    {circuitBreaker.current.isOpen ? 'Service Temporarily Unavailable' : 'Attendance Data Error'}
                   </h4>
                   <p className="mb-3">{error}</p>
+                  
+                  {circuitBreaker.current.isOpen && (
+                    <div className="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded">
+                      <p className="text-yellow-800 text-sm">
+                        <i className="bi bi-shield-exclamation mr-2"></i>
+                        The system is temporarily limiting requests to protect the server. 
+                        Please wait a moment before trying again.
+                      </p>
+                      <div className="mt-2 text-xs text-yellow-600">
+                        Circuit breaker will reset automatically in a few moments.
+                      </div>
+                    </div>
+                  )}
                   
                   <div className="flex gap-2 flex-wrap">
                     <button
                       onClick={() => {
                         setError(null);
-                        if (isLoggedIn && employee) {
+                        if (isLoggedIn && employee && !circuitBreaker.current.isOpen) {
                           loadAttendanceData();
                         }
                       }}
-                      className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700 transition-colors"
+                      disabled={circuitBreaker.current.isOpen || isLoadingAttendance}
+                      className={`px-3 py-1 rounded text-sm transition-colors ${
+                        circuitBreaker.current.isOpen || isLoadingAttendance
+                          ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                          : 'bg-red-600 text-white hover:bg-red-700'
+                      }`}
                     >
-                      <i className="bi bi-arrow-clockwise mr-1"></i>
-                      Retry
+                      <i className={`bi bi-${isLoadingAttendance ? 'arrow-repeat animate-spin' : 'arrow-clockwise'} mr-1`}></i>
+                      {isLoadingAttendance ? 'Loading...' : 'Retry'}
                     </button>
                     
                     <button
@@ -377,6 +579,22 @@ const AttendancePage: React.FC = () => {
                       <i className="bi bi-person-refresh mr-1"></i>
                       Refresh Session
                     </button>
+                    
+                    {circuitBreaker.current.isOpen && (
+                      <button
+                        onClick={() => {
+                          // Reset circuit breaker manually
+                          circuitBreaker.current.isOpen = false;
+                          circuitBreaker.current.failureCount = 0;
+                          setError(null);
+                          showNotification('Circuit breaker reset. You can try again now.', 'info');
+                        }}
+                        className="px-3 py-1 bg-orange-600 text-white rounded text-sm hover:bg-orange-700 transition-colors"
+                      >
+                        <i className="bi bi-bootstrap-reboot mr-1"></i>
+                        Force Reset
+                      </button>
+                    )}
                   </div>
                 </div>
                 
@@ -386,6 +604,20 @@ const AttendancePage: React.FC = () => {
                 >
                   <i className="bi bi-x-lg"></i>
                 </button>
+              </div>
+            </div>
+          )}
+          
+          {isLoadingAttendance && !error && (
+            <div className="mb-4 p-4 bg-blue-50 text-blue-700 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="animate-spin">
+                  <i className="bi bi-arrow-repeat"></i>
+                </div>
+                <div>
+                  <h4 className="font-semibold">Loading Attendance Data</h4>
+                  <p className="text-sm">Please wait while we fetch your attendance information...</p>
+                </div>
               </div>
             </div>
           )}
@@ -417,7 +649,8 @@ const AttendancePage: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <LeaveCalendar 
               leaveDates={leaveDates}
-                  onLeaveDatesChange={handleLeaveDatesChange}
+              approvedLeaveDates={approvedLeaveDates}
+              onLeaveDatesChange={handleLeaveDatesChange}
             />
             <AttendanceReports
               weeklyHours={weeklyHours}

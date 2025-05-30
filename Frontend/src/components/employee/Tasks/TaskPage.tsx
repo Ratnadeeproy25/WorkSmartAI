@@ -80,12 +80,6 @@ const TaskPage: React.FC = () => {
     applyFilters();
   }, [tasks, searchTerm, priorityFilter, dateFilter]);
 
-  // Notify components when tasks change
-  useEffect(() => {
-    // Dispatch event to notify other components
-    window.dispatchEvent(new Event('employeeTasksUpdated'));
-  }, [tasks]);
-
   // Apply search and filters
   const applyFilters = () => {
     let results = [...tasks];

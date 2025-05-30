@@ -9,6 +9,41 @@ interface ApiResponse<T> {
   message?: string;
 }
 
+// Retry helper with exponential backoff
+const retryWithBackoff = async <T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  baseDelay: number = 1000
+): Promise<T> => {
+  let lastError: any;
+  
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      lastError = error;
+      
+      // Don't retry for certain errors
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        throw error;
+      }
+      
+      // Don't retry on the last attempt
+      if (attempt === maxRetries) {
+        break;
+      }
+      
+      // Calculate delay with exponential backoff and jitter
+      const delay = baseDelay * Math.pow(2, attempt) + Math.random() * 1000;
+      console.log(`Attempt ${attempt + 1} failed, retrying in ${delay}ms...`);
+      
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  
+  throw lastError;
+};
+
 // Extend window interface to support user-specific caches
 declare global {
   interface Window {
@@ -156,9 +191,9 @@ export const debugCheckIn = async (location: LocationData): Promise<any> => {
   }
 };
 
-// Check in employee
+// Check in employee with retry logic
 export const checkIn = async (location: LocationData): Promise<AttendanceRecord> => {
-  try {
+  return retryWithBackoff(async () => {
     // Validate location data before sending
     if (!location || !location.lat || !location.lng) {
       throw new Error('Location data is required for check-in. Please enable location services.');
@@ -181,38 +216,7 @@ export const checkIn = async (location: LocationData): Promise<AttendanceRecord>
     cache.stats = null;
     
     return response.data.data;
-  } catch (error: any) {
-    console.error('Error checking in:', error);
-    
-    // Handle specific error cases
-    if (error.response) {
-      const status = error.response.status;
-      const message = error.response.data?.message || 'Check-in failed';
-      
-      console.error('Check-in error details:', {
-        status,
-        message,
-        data: error.response.data
-      });
-      
-      if (status === 400) {
-        throw new Error(message);
-      } else if (status === 401) {
-        throw new Error('Authentication failed. Please login again.');
-      } else if (status === 404) {
-        throw new Error('Employee record not found. Please contact admin.');
-      } else if (status === 500) {
-        throw new Error('Server error. Please try again later.');
-      }
-    }
-    
-    // Network or other errors
-    if (error.message) {
-      throw error;
-    }
-    
-    throw new Error('Check-in failed. Please try again.');
-  }
+  }, 2, 1000); // 2 retries with 1 second base delay
 };
 
 // Check out employee

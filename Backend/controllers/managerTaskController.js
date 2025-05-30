@@ -132,6 +132,15 @@ const createTask = asyncHandler(async (req, res) => {
     throw new Error('Please provide all required fields');
   }
 
+  // Only log in development
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('Manager creating task:', {
+      managerId: req.user._id,
+      assigneeId: assigneeId,
+      title: title
+    });
+  }
+
   // Find the assignee to get their name and custom id
   const assignee = await Employee.findById(assigneeId);
   
@@ -140,8 +149,29 @@ const createTask = asyncHandler(async (req, res) => {
     throw new Error('Assignee not found');
   }
 
+  // Verify that the assignee is managed by the current manager
+  const managerId = req.user._id;
+  if (assignee.manager && assignee.manager.toString() !== managerId.toString()) {
+    console.log('Manager assignment validation failed:', {
+      assigneeId: assignee._id,
+      assigneeManager: assignee.manager,
+      currentManager: managerId
+    });
+    res.status(403);
+    throw new Error('You can only assign tasks to employees you manage');
+  }
+
+  // Only log in development
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('Found assignee:', {
+      _id: assignee._id,
+      name: assignee.name,
+      manager: assignee.manager
+    });
+  }
+
   // Create task with specified assignee and current manager as creator
-  const task = await Task.create({
+  const taskData = {
     title,
     description,
     priority: priority || 'medium',
@@ -160,7 +190,25 @@ const createTask = asyncHandler(async (req, res) => {
     },
     progress: progress || 0,
     subtasks: subtasks || []
-  });
+  };
+
+  // Only log in development
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('Creating task with data:', {
+      assignee: taskData.assignee,
+      createdBy: taskData.createdBy
+    });
+  }
+
+  const task = await Task.create(taskData);
+
+  // Only log in development
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('Task created successfully:', {
+      taskId: task._id,
+      assigneeData: task.assignee
+    });
+  }
 
   res.status(201).json(task);
 });

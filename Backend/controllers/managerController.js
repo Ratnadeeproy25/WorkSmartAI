@@ -31,15 +31,23 @@ exports.createManager = async (req, res) => {
     // Initialize leave balance for the new manager
     try {
       await leaveBalanceService.ensureLeaveBalance(manager._id);
-      console.log(`✅ Leave balance initialized for manager ${manager.name} (${manager.id})`);
+      // console.log(`✅ Leave balance initialized for manager ${manager.name} (${manager.id})`);
     } catch (balanceError) {
       console.error(`❌ Failed to initialize leave balance for manager ${manager.name}:`, balanceError);
       // Don't fail the manager creation if leave balance fails
     }
     
-    res.status(201).json({ success: true, data: manager });
+    return res.status(201).json({
+      success: true,
+      data: manager,
+      message: 'Manager created successfully'
+    });
   } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
+    console.error('Error creating manager:', error);
+    return res.status(400).json({
+      success: false,
+      message: error.message
+    });
   }
 };
 
@@ -174,29 +182,29 @@ exports.initializeManagerLeaveBalances = async (req, res) => {
     let existing = 0;
     let errors = 0;
     
-    console.log(`🔄 Initializing leave balances for ${managers.length} managers...`);
+    // console.log(`🔄 Initializing leave balances for ${managers.length} managers...`);
     
-    for (const manager of managers) {
-      try {
-        const existingBalance = await leaveBalanceService.ensureLeaveBalance(manager._id, currentYear);
-        
-        // Check if this was newly created or already existed
-        const balanceExists = await LeaveBalance.findOne({ 
-          employeeId: manager._id, 
-          year: currentYear 
-        });
-        
-        if (balanceExists) {
-          created++;
-          console.log(`✅ Leave balance ensured for ${manager.name} (${manager.id})`);
-        } else {
-          existing++;
+    const results = await Promise.all(
+      managers.map(async (manager) => {
+        try {
+          const existingBalance = await LeaveBalance.findOne({
+            employeeId: manager._id,
+            year: currentYear
+          });
+          
+          if (!existingBalance) {
+            await LeaveBalance.initializeBalances(manager._id, currentYear);
+            // console.log(`✅ Leave balance ensured for ${manager.name} (${manager.id})`);
+            return { success: true, manager: manager.name };
+          }
+          
+          return { success: true, manager: manager.name, existed: true };
+        } catch (error) {
+          console.error(`Error for manager ${manager.name}:`, error);
+          return { success: false, manager: manager.name, error: error.message };
         }
-      } catch (error) {
-        errors++;
-        console.error(`❌ Failed to initialize balance for ${manager.name} (${manager.id}):`, error.message);
-      }
-    }
+      })
+    );
     
     res.status(200).json({
       success: true,

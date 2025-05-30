@@ -296,7 +296,7 @@ class NotificationService {
       });
     } else {
       // Fallback to console or in-app notification
-      console.log(`Notification: ${title} - ${body}`);
+      // console.log(`Notification: ${title} - ${body}`);
       this.showInAppNotification(title, body);
     }
   }

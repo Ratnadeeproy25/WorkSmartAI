@@ -8,7 +8,8 @@ import TaskDistributionChart from './charts/TaskDistributionChart';
 import AttendanceChart from './charts/AttendanceChart';
 import ProductivityChart from './charts/ProductivityChart';
 import { useAuth } from '../../../context/AuthContext';
-import { getManagerDashboardData, DashboardData, DashboardMetrics } from '../../../services/managerService';
+import { getManagerDashboardData, DashboardData, DashboardMetrics, getTeamMembers } from '../../../services/managerService';
+import { managerEmployeeDataApi } from '../../../services/managerEmployeeDataApi';
 import '../../../styles/NeomorphicUI.css';
 import '../../../styles/manager/index.css';
 
@@ -29,13 +30,67 @@ const Dashboard: React.FC = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const data = await getManagerDashboardData();
+      setError(null);
+      
+      // Try to get dashboard data first
+      let data;
+      try {
+        data = await getManagerDashboardData();
+        // console.log('Dashboard data received:', data);
+      } catch (dashboardError) {
+        // console.error('Dashboard API failed, trying alternative approach:', dashboardError);
+        
+        // If dashboard API fails, try to fetch team members separately
+        try {
+          const assignedEmployees = await managerEmployeeDataApi.getAssignedEmployees();
+          // console.log('Assigned employees data:', assignedEmployees);
+          
+          // Format the data to match TeamMember interface
+          const formattedTeamMembers = assignedEmployees.data.map(emp => ({
+            id: emp._id || emp.id,
+            name: emp.name,
+            position: emp.position,
+            status: 'Active' as const, // Default status
+            performance: 85, // Default performance
+            avatar: emp.profilePicture || `https://randomuser.me/api/portraits/${Math.random() > 0.5 ? 'men' : 'women'}/${Math.floor(Math.random() * 99)}.jpg`,
+            lastActive: 'Recently',
+            email: emp.email
+          }));
+          
+          // Create a mock dashboard data structure
+          data = {
+            manager: {
+              name: userName || 'Manager',
+              department: 'Unknown',
+              position: 'Manager'
+            },
+            metrics: {
+              totalEmployees: assignedEmployees.count,
+              attendanceRate: '0%',
+              activeTasks: 0,
+              pendingRequests: 0
+            },
+            chartData: {
+              performance: { labels: [], datasets: [], isEmpty: true },
+              taskDistribution: { labels: [], datasets: [], isEmpty: true },
+              attendance: { labels: [], datasets: [], isEmpty: true },
+              productivity: { labels: [], datasets: [], isEmpty: true }
+            },
+            teamMembers: formattedTeamMembers,
+            recentTasks: []
+          };
+        } catch (employeeDataError) {
+          // console.error('Failed to fetch assigned employees:', employeeDataError);
+          throw new Error('Unable to fetch team data from any endpoint');
+        }
+      }
+      
       setDashboardData(data);
       setMetrics(data.metrics);
-      setError(null);
-    } catch (error) {
+      
+    } catch (error: any) {
       console.error('Error fetching dashboard data:', error);
-      setError('Failed to load dashboard data');
+      setError(`Failed to load dashboard data: ${error.message}`);
       // Keep the default metrics values on error
     } finally {
       setLoading(false);

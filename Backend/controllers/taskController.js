@@ -8,28 +8,50 @@ const mongoose = require('mongoose');
  * @access  Private/Employee
  */
 const getTasks = asyncHandler(async (req, res) => {
-  // Get tasks for the current logged-in employee (only assigned to them)
-  const employeeId = req.user._id.toString();
-  const customId = req.user.id;
-  // console.log('Fetching tasks for employee with ID:', employeeId);
+  // Get the employee's MongoDB _id and custom id
+  const employeeMongoId = req.user._id.toString();
+  const employeeCustomId = req.user.id;
   
-  // Try multiple potential ID formats to ensure we find all tasks
-  const tasks = await Task.find({
+  // Only log in development or when debugging
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('Fetching tasks for employee:', {
+      mongoId: employeeMongoId,
+      customId: employeeCustomId,
+      name: req.user.name
+    });
+  }
+  
+  // Build comprehensive search query to find tasks assigned to this employee
+  // Search by MongoDB _id (most common case) and custom id as fallback
+  const searchQuery = {
     $or: [
-      { 'assignee.id': employeeId },
-      { 'assignee.id': customId },
-      { 'assignee.customId': customId }
+      { 'assignee.id': employeeMongoId },       // MongoDB _id stored as string
+      { 'assignee.id': employeeCustomId },      // Custom ID stored in assignee.id
+      { 'assignee.customId': employeeCustomId }, // Custom ID stored in assignee.customId
     ]
+  };
+  
+  // Remove any falsy values from the search query
+  searchQuery.$or = searchQuery.$or.filter(condition => {
+    const value = Object.values(condition)[0];
+    return value && value !== '';
   });
+  
+  const tasks = await Task.find(searchQuery);
 
-  // console.log(`Found ${tasks.length} tasks for employee`);
-  // tasks.forEach(task => {
-  //   console.log('Task:', {
-  //     id: task._id,
-  //     title: task.title,
-  //     assignee: task.assignee
-  //   });
-  // });
+  // Only log details in development or when there are issues
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`Found ${tasks.length} tasks for employee ${req.user.name}`);
+  }
+  
+  // If no tasks found in development, help debug
+  if (tasks.length === 0 && process.env.NODE_ENV !== 'production') {
+    const allTasks = await Task.find({}).limit(3);
+    console.log('No tasks found. Sample tasks in database:', allTasks.map(task => ({
+      title: task.title,
+      assignee: task.assignee
+    })));
+  }
   
   res.status(200).json(tasks);
 });
@@ -47,8 +69,22 @@ const getTaskById = asyncHandler(async (req, res) => {
     throw new Error('Task not found');
   }
 
-  // Check if task is assigned to the current employee
-  if (task.assignee.id !== req.user.id.toString()) {
+  // Check if task is assigned to the current employee using same logic as getTasks
+  const employeeMongoId = req.user._id.toString();
+  const employeeCustomId = req.user.id;
+  
+  const isAssignedToEmployee = 
+    task.assignee.id === employeeMongoId || 
+    task.assignee.id === employeeCustomId || 
+    task.assignee.customId === employeeCustomId;
+
+  if (!isAssignedToEmployee) {
+    console.log('Task access denied:', {
+      taskId: req.params.id,
+      taskAssignee: task.assignee,
+      employeeMongoId,
+      employeeCustomId
+    });
     res.status(403);
     throw new Error('Not authorized to access this task');
   }
@@ -151,8 +187,22 @@ const updateTaskStatus = asyncHandler(async (req, res) => {
     throw new Error('Task not found');
   }
 
-  // Check if task is assigned to the current employee
-  if (task.assignee.id !== req.user.id.toString()) {
+  // Check if task is assigned to the current employee using same logic as getTasks
+  const employeeMongoId = req.user._id.toString();
+  const employeeCustomId = req.user.id;
+  
+  const isAssignedToEmployee = 
+    task.assignee.id === employeeMongoId || 
+    task.assignee.id === employeeCustomId || 
+    task.assignee.customId === employeeCustomId;
+
+  if (!isAssignedToEmployee) {
+    console.log('Task update access denied:', {
+      taskId: req.params.id,
+      taskAssignee: task.assignee,
+      employeeMongoId,
+      employeeCustomId
+    });
     res.status(403);
     throw new Error('Not authorized to update this task');
   }
@@ -216,8 +266,22 @@ const updateTaskProgress = asyncHandler(async (req, res) => {
     throw new Error('Task not found');
   }
 
-  // Check if task is assigned to the current employee
-  if (task.assignee.id !== req.user.id.toString()) {
+  // Check if task is assigned to the current employee using same logic as getTasks
+  const employeeMongoId = req.user._id.toString();
+  const employeeCustomId = req.user.id;
+  
+  const isAssignedToEmployee = 
+    task.assignee.id === employeeMongoId || 
+    task.assignee.id === employeeCustomId || 
+    task.assignee.customId === employeeCustomId;
+
+  if (!isAssignedToEmployee) {
+    console.log('Task progress update access denied:', {
+      taskId: req.params.id,
+      taskAssignee: task.assignee,
+      employeeMongoId,
+      employeeCustomId
+    });
     res.status(403);
     throw new Error('Not authorized to update this task');
   }
@@ -257,8 +321,22 @@ const updateTaskTime = asyncHandler(async (req, res) => {
     throw new Error('Task not found');
   }
 
-  // Check if task is assigned to the current employee
-  if (task.assignee.id !== req.user.id.toString()) {
+  // Check if task is assigned to the current employee using same logic as getTasks
+  const employeeMongoId = req.user._id.toString();
+  const employeeCustomId = req.user.id;
+  
+  const isAssignedToEmployee = 
+    task.assignee.id === employeeMongoId || 
+    task.assignee.id === employeeCustomId || 
+    task.assignee.customId === employeeCustomId;
+
+  if (!isAssignedToEmployee) {
+    console.log('Task time update access denied:', {
+      taskId: req.params.id,
+      taskAssignee: task.assignee,
+      employeeMongoId,
+      employeeCustomId
+    });
     res.status(403);
     throw new Error('Not authorized to update this task');
   }
