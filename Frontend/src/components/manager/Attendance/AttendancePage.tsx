@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet';
 import Sidebar from '../Sidebar';
 import AttendanceHeader from './AttendanceHeader';
 import CurrentStatus from './CurrentStatus';
@@ -8,6 +9,7 @@ import CheckInOutControls from './CheckInOutControls';
 import LeaveCalendar from './LeaveCalendar';
 import managerAttendanceService from '../../../services/managerAttendanceService';
 import leaveService from '../../../services/leaveService';
+import { getManagerById } from '../../../services/managerService';
 import { AttendanceStatus } from '../../admin/attendance-management/types';
 import { AttendanceRecord, LocationData, LeaveBalance, WeeklyHours, AttendanceStats, Employee } from '../../employee/Attendance/types';
 import * as authService from '../../../services/authService';
@@ -34,62 +36,115 @@ const AttendancePage: React.FC = () => {
   });
   const [isLocationWithinWorkArea, setIsLocationWithinWorkArea] = useState<boolean>(false);
 
-  // Load the current manager
+  // Load the current manager and their profile
   useEffect(() => {
-    // Check if we have a valid manager auth token
-    const token = authService.getManagerToken();
-    if (!token) {
-      setError('You need to be logged in as a manager to access this page');
-      setIsLoggedIn(false);
-      navigate('/login');
-      return;
-    }
-    // Check if we have a manager user in localStorage
     const managerData = localStorage.getItem('managerUserData');
     if (managerData) {
-      try {
-        const parsedUser = JSON.parse(managerData);
-        if (parsedUser.role !== 'manager') {
-          setError('Access denied. Only managers can access this page.');
-          setIsLoggedIn(false);
-          navigate('/login');
-          return;
-        }
-        setManager({
-          id: parsedUser._id || parsedUser.id,
-          name: parsedUser.name,
-          email: parsedUser.email
-        });
-        setIsLoggedIn(true);
-      } catch (err) {
-        console.error('Error parsing manager user data:', err);
-        setError('Error loading manager profile. Please login again.');
-        setIsLoggedIn(false);
-        navigate('/login');
-      }
-    } else {
-      setError('You need to be logged in as a manager to access this page');
-      setIsLoggedIn(false);
-      navigate('/login');
+      const parsedUser = JSON.parse(managerData);
+      setManager({
+        id: parsedUser.id,
+        name: parsedUser.name,
+        email: parsedUser.email
+      });
+      setIsLoggedIn(true);
+      
+      // Load full manager profile with shift time and office location
+      loadManagerProfile(parsedUser.id);
     }
-  }, [navigate]);
+  }, []);
 
-  // Get current status based on check-in/out times and leave dates
-  const getCurrentStatus = (): AttendanceStatus => {
-    const today = new Date().toISOString().split('T')[0];
-    if (leaveDates.has(today)) return 'leave';
-    if (!checkInTime) return 'absent';
-    if (checkOutTime) return 'present';
-    return 'present';
+  // Function to load manager profile data
+  const loadManagerProfile = async (managerId: string) => {
+    try {
+      // Use the proper manager service to get complete manager data
+      const profile = await getManagerById(managerId);
+      
+      // Convert the manager data to the format expected by attendance system
+      setManager({
+        id: profile.id,
+        name: profile.name,
+        email: profile.email,
+        department: profile.department,
+        position: profile.position,
+        shiftTime: profile.shiftTime || { start: '09:00', end: '17:00' },
+        officeLocation: profile.officeLocation || { lat: 0, lng: 0, address: { city: '', state: '', country: '' } }
+      });
+    } catch (error) {
+      console.error('Error loading manager profile:', error);
+      // Set a default profile to prevent errors
+      setManager({
+        id: managerId,
+        name: manager?.name || '',
+        email: manager?.email || '',
+        shiftTime: { start: '09:00', end: '17:00' },
+        officeLocation: { lat: 0, lng: 0, address: { city: '', state: '', country: '' } }
+      });
+    }
   };
 
-  // Location update function
-  const updateLocationStatus = (location: LocationData) => {
-    const officeLocation = { lat: 0, lng: 0 }; // Replace with actual office coordinates
-    const distance = calculateDistance(location, officeLocation);
-    const isInOffice = distance <= 0.1; // Within 100 meters of office
+  // Function to validate if check-in time is within shift hours
+  const isWithinShiftHours = (currentTime: Date, shiftTime?: { start: string; end: string }): { isValid: boolean; message?: string } => {
+    if (!shiftTime) {
+      return { isValid: true }; // If no shift time defined, allow any time
+    }
 
-    setLocationStatus(isInOffice ? 'At Office' : 'Remote');
+    const currentHour = currentTime.getHours();
+    const currentMinute = currentTime.getMinutes();
+    const currentTimeInMinutes = currentHour * 60 + currentMinute;
+
+    // Parse shift start time
+    const [startHour, startMinute] = shiftTime.start.split(':').map(Number);
+    const shiftStartInMinutes = startHour * 60 + startMinute;
+
+    // Parse shift end time
+    const [endHour, endMinute] = shiftTime.end.split(':').map(Number);
+    const shiftEndInMinutes = endHour * 60 + endMinute;
+
+    // Allow check-in 30 minutes before shift start and 2 hours after shift start
+    const earlyCheckInBuffer = 30; // minutes
+    const lateCheckInBuffer = 120; // minutes (2 hours)
+
+    const earliestCheckIn = shiftStartInMinutes - earlyCheckInBuffer;
+    const latestCheckIn = shiftStartInMinutes + lateCheckInBuffer;
+
+    if (currentTimeInMinutes < earliestCheckIn) {
+      const earliestTime = `${Math.floor(earliestCheckIn / 60).toString().padStart(2, '0')}:${(earliestCheckIn % 60).toString().padStart(2, '0')}`;
+      return { 
+        isValid: false, 
+        message: `Check-in too early. You can check in from ${earliestTime} onwards (30 minutes before your shift).` 
+      };
+    }
+
+    if (currentTimeInMinutes > latestCheckIn) {
+      const latestTime = `${Math.floor(latestCheckIn / 60).toString().padStart(2, '0')}:${(latestCheckIn % 60).toString().padStart(2, '0')}`;
+      return { 
+        isValid: false, 
+        message: `Check-in too late. Latest check-in time is ${latestTime} (2 hours after shift start).` 
+      };
+    }
+
+    return { isValid: true };
+  };
+
+  // Update location status with proper office location
+  const updateLocationStatus = (location: LocationData) => {
+    // Check if there's meaningful office location data (address OR coordinates)
+    const hasAddress = manager?.officeLocation?.address && (
+      manager.officeLocation.address.city || 
+      manager.officeLocation.address.state || 
+      manager.officeLocation.address.country
+    );
+    const hasCoordinates = manager?.officeLocation && (
+      manager.officeLocation.lat !== 0 || manager.officeLocation.lng !== 0
+    );
+
+    if (!hasAddress && !hasCoordinates) {
+      setLocationStatus('Remote');
+      return;
+    }
+
+    // If manager has office location configured, show as "At Office"
+    setLocationStatus('At Office');
   };
 
   // Get location
@@ -229,7 +284,16 @@ const AttendancePage: React.FC = () => {
     }
   };
 
-  // Check-in handler
+  // Get current status based on check-in/out times and leave dates
+  const getCurrentStatus = (): AttendanceStatus => {
+    const today = new Date().toISOString().split('T')[0];
+    if (leaveDates.has(today)) return 'leave';
+    if (!checkInTime) return 'absent';
+    if (checkOutTime) return 'present';
+    return 'present';
+  };
+
+  // Check-in handler with enhanced validation
   const handleCheckIn = async () => {
     if (!isLoggedIn) {
       setError('Please log in first');
@@ -242,19 +306,51 @@ const AttendancePage: React.FC = () => {
       return;
     }
 
+    if (!manager) {
+      setError('Manager profile not loaded. Please refresh the page.');
+      return;
+    }
+
+    // Validate shift time
+    const now = new Date();
+    const shiftValidation = isWithinShiftHours(now, manager.shiftTime);
+    if (!shiftValidation.isValid) {
+      setError(shiftValidation.message || 'Check-in time is outside your shift hours');
+      return;
+    }
+
+    // Validate location (only if office location is set)
+    if (manager.officeLocation && manager.officeLocation.lat !== 0 && manager.officeLocation.lng !== 0) {
+      // Check if manager has office location configured
+      const hasAddress = manager.officeLocation.address && (
+        manager.officeLocation.address.city || 
+        manager.officeLocation.address.state || 
+        manager.officeLocation.address.country
+      );
+      const hasCoordinates = manager.officeLocation.lat !== 0 || manager.officeLocation.lng !== 0;
+
+      if (!hasAddress && !hasCoordinates) {
+        setError('No office location configured. Please set your office location first.');
+        return;
+      }
+    }
+
     try {
       setError(null);
       
-      // Call check-in API
+      // Call check-in API with basic location data (enhanced validation done above)
       await managerAttendanceService.checkIn(currentLocation);
       
-      const now = new Date();
       setCheckInTime(now);
       
       // Start work timer
       startWorkTimer(now);
       
-      showNotification('Checked in successfully', 'success');
+      // Show success message with shift info
+      const shiftInfo = manager.shiftTime 
+        ? ` (Shift: ${manager.shiftTime.start} - ${manager.shiftTime.end})` 
+        : '';
+      showNotification(`Checked in successfully${shiftInfo}`, 'success');
       
       // Refresh attendance data to get updated records
       loadAttendanceData();
@@ -269,7 +365,7 @@ const AttendancePage: React.FC = () => {
     }
   };
 
-  // Check-out handler
+  // Check-out handler with enhanced validation
   const handleCheckOut = async () => {
     if (!isLoggedIn) {
       setError('Please log in first');
@@ -286,14 +382,23 @@ const AttendancePage: React.FC = () => {
       return;
     }
 
+    if (!manager) {
+      setError('Manager profile not loaded. Please refresh the page.');
+      return;
+    }
+
     try {
-      // Call check-out API
+      // Call check-out API with basic location data (enhanced validation done above)
       const attendanceData = await managerAttendanceService.checkOut(currentLocation);
       
       const now = new Date();
       setCheckOutTime(now);
       
-      // Update work hours
+      // Calculate actual work hours
+      const workHours = (now.getTime() - checkInTime.getTime()) / (1000 * 60 * 60);
+      setHoursWorked(workHours.toFixed(2));
+      
+      // Update from API response if available
       if (attendanceData.workHours) {
         setHoursWorked(attendanceData.workHours.toFixed(2));
       }
@@ -301,7 +406,8 @@ const AttendancePage: React.FC = () => {
       // Stop work timer
       stopWorkTimer();
       
-      showNotification('Checked out successfully', 'success');
+      // Show success message with work hours
+      showNotification(`Checked out successfully (${workHours.toFixed(2)} hours worked)`, 'success');
       
       // Refresh stats
       try {
@@ -347,6 +453,13 @@ const AttendancePage: React.FC = () => {
     };
   }, [isLoggedIn]);
 
+  // Update location status when manager profile or current location changes
+  useEffect(() => {
+    if (manager && currentLocation) {
+      updateLocationStatus(currentLocation);
+    }
+  }, [manager, currentLocation]);
+
   // Update location check when location or profile changes
   useEffect(() => {
     if (currentLocation && manager?.officeLocation) {
@@ -356,7 +469,10 @@ const AttendancePage: React.FC = () => {
   }, [currentLocation, manager]);
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="manager-attendance-container bg-[#e0e5ec] min-h-screen w-full overflow-x-hidden">
+      <Helmet>
+        <title>WorkSmart AI - Attendance Management</title>
+      </Helmet>
       <Sidebar />
       <div className="ml-64 p-6">
         <div className="max-w-7xl mx-auto">
@@ -393,6 +509,8 @@ const AttendancePage: React.FC = () => {
                   status={getCurrentStatus()}
                   locationStatus={locationStatus}
                   checkInTime={checkInTime?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  shiftTime={manager?.shiftTime}
+                  officeLocation={manager?.officeLocation}
                 />
                 <CheckInOutControls 
                   onCheckIn={handleCheckIn} 

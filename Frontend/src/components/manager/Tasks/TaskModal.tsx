@@ -12,6 +12,7 @@ interface TaskModalProps {
 
 interface TeamMember {
   _id: string;
+  id: string; // Custom employee ID like "EM001"
   name: string;
   email: string;
   position: string;
@@ -36,10 +37,8 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
         const members = await managerTaskService.getTeamMembers();
         setTeamMembers(members);
         
-        // Set default assignee to first team member if available
-        if (members.length > 0 && !assigneeId) {
-          setAssigneeId(members[0]._id);
-        }
+        // Don't automatically set a default assignee - let user select
+        // Only set assignee when editing an existing task
       } catch (error) {
         console.error('Error fetching team members:', error);
         setError('Failed to load team members. Please try again later.');
@@ -47,7 +46,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
     };
     
     fetchTeamMembers();
-  }, [assigneeId]);
+  }, []); // Remove assigneeId dependency since we're not auto-selecting anymore
 
   // Load task data if editing an existing task
   useEffect(() => {
@@ -252,7 +251,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                 <option value="">Select Assignee</option>
                 {teamMembers.map(member => (
                   <option key={member._id} value={member._id}>
-                    {member.name} ({member.position})
+                    {member.id} - {member.name} ({member.position})
                   </option>
                 ))}
               </select>

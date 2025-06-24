@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Helmet } from 'react-helmet';
 import Sidebar from '../Sidebar';
 import LeaveReimbursementHeader from './LeaveReimbursementHeader';
 import LeaveRequestForm from './LeaveRequestForm';
@@ -152,6 +153,9 @@ const LeaveReimbursementPage: React.FC = () => {
 
   return (
     <div className="manager-leave-container bg-[#e0e5ec] min-h-screen w-full overflow-x-hidden">
+      <Helmet>
+        <title>WorkSmart AI - Leave & Reimbursements</title>
+      </Helmet>
       {/* Overlay for mobile sidebar */}
       {sidebarOpen && window.innerWidth <= 1024 && (
         <div 

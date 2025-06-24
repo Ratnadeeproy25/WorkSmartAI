@@ -22,7 +22,8 @@ const managerAttendanceSchema = new mongoose.Schema(
     },
     checkIn: {
       type: Date,
-      required: true,
+      required: false,
+      default: null,
     },
     checkOut: {
       type: Date,
@@ -34,7 +35,8 @@ const managerAttendanceSchema = new mongoose.Schema(
     },
     location: {
       type: locationSchema,
-      required: true,
+      required: false,
+      default: null,
     },
     status: {
       type: String,

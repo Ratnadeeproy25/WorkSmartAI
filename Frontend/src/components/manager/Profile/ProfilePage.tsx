@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Helmet } from 'react-helmet';
 import Sidebar from '../Sidebar';
 import UserProfile from './UserProfile';
 import SecuritySettings from './SecuritySettings';
@@ -28,7 +29,10 @@ const ProfilePage: React.FC = () => {
   }, []);
 
   return (
-    <div className="bg-[#e0e5ec] min-h-screen w-full overflow-x-hidden">
+    <div className="manager-profile-container bg-[#e0e5ec] min-h-screen w-full overflow-x-hidden">
+      <Helmet>
+        <title>WorkSmart AI - Manager Profile</title>
+      </Helmet>
       {/* Overlay for mobile sidebar */}
       {sidebarOpen && window.innerWidth <= 1024 && (
         <div 

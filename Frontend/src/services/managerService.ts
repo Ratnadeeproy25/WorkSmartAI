@@ -174,6 +174,17 @@ export const getManagerProfile = async (email: string): Promise<ManagerProfile> 
   }
 };
 
+// Get manager by ID
+export const getManagerById = async (id: string): Promise<Manager> => {
+  try {
+    const response = await api.get<ApiResponse<Manager>>(`/managers/${id}`);
+    return response.data.data;
+  } catch (error) {
+    console.error('Error fetching manager by ID:', error);
+    throw error;
+  }
+};
+
 // Update manager contact information
 export const updateManagerContactInfo = async (email: string, phone: string, location: string): Promise<{contactInfo: {email: string, phone: string, location: string, teamSize: string}}> => {
   try {

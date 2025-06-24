@@ -10,7 +10,7 @@ interface FilterPanelProps {
 const FilterPanel: React.FC<FilterPanelProps> = ({ filters, onFilterChange, departments = [] }) => {
   return (
     <div className="neo-box p-4 mb-6">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <div>
           <label htmlFor="departmentFilter" className="text-xs text-gray-600 block mb-1">Department</label>
           <select 
@@ -40,20 +40,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ filters, onFilterChange, depa
             <option value="good">Good</option>
             <option value="warning">Warning</option>
             <option value="critical">Critical</option>
-          </select>
-        </div>
-        
-        <div>
-          <label htmlFor="roleFilter" className="text-xs text-gray-600 block mb-1">Role</label>
-          <select 
-            id="roleFilter" 
-            className="neo-input py-1.5 px-2 rounded text-sm w-full"
-            value={filters.role}
-            onChange={(e) => onFilterChange({ role: e.target.value })}
-          >
-            <option value="all">All Roles</option>
-            <option value="employee">Employee</option>
-            <option value="manager">Manager</option>
           </select>
         </div>
         

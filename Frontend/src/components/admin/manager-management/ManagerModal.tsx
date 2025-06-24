@@ -32,7 +32,12 @@ const ManagerModal: React.FC<ManagerModalProps> = ({
     },
     officeLocation: {
       lat: 0,
-      lng: 0
+      lng: 0,
+      address: {
+        city: '',
+        state: '',
+        country: ''
+      }
     }
   });
   
@@ -52,7 +57,15 @@ const ManagerModal: React.FC<ManagerModalProps> = ({
           department: manager.department,
           position: manager.position,
           shiftTime: manager.shiftTime || { start: '09:00', end: '17:00' },
-          officeLocation: manager.officeLocation || { lat: 0, lng: 0 }
+          officeLocation: {
+            lat: manager.officeLocation?.lat || 0,
+            lng: manager.officeLocation?.lng || 0,
+            address: {
+              city: manager.officeLocation?.address?.city || '',
+              state: manager.officeLocation?.address?.state || '',
+              country: manager.officeLocation?.address?.country || ''
+            }
+          }
         });
       } else {
         // Reset form for new manager
@@ -64,7 +77,11 @@ const ManagerModal: React.FC<ManagerModalProps> = ({
           department: '',
           position: '',
           shiftTime: { start: '09:00', end: '17:00' },
-          officeLocation: { lat: 0, lng: 0 }
+          officeLocation: { 
+            lat: 0, 
+            lng: 0, 
+            address: { city: '', state: '', country: '' } 
+          }
         });
         
         // Generate ID for new manager
@@ -113,18 +130,25 @@ const ManagerModal: React.FC<ManagerModalProps> = ({
       setLocationLoading(true);
       navigator.geolocation.getCurrentPosition(
         (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          
           setFormData(prev => ({
             ...prev,
             officeLocation: {
-              lat: position.coords.latitude,
-              lng: position.coords.longitude
+              ...prev.officeLocation,
+              lat: lat,
+              lng: lng
             }
           }));
+          
+          // Try to get address from coordinates using reverse geocoding
+          reverseGeocode(lat, lng);
           setLocationLoading(false);
         },
         (error) => {
           console.error('Error getting location:', error);
-          alert('Error getting your location. Please try again or enter coordinates manually.');
+          alert('Error getting your location. Please try again or enter the address manually.');
           setLocationLoading(false);
         }
       );
@@ -133,7 +157,70 @@ const ManagerModal: React.FC<ManagerModalProps> = ({
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const reverseGeocode = async (lat: number, lng: number) => {
+    try {
+      // Using a free geocoding service (you can replace with your preferred service)
+      const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`);
+      const data = await response.json();
+      
+      if (data) {
+        setFormData(prev => ({
+          ...prev,
+          officeLocation: {
+            ...prev.officeLocation,
+            address: {
+              city: data.city || data.locality || '',
+              state: data.principalSubdivision || '',
+              country: data.countryName || ''
+            }
+          }
+        }));
+      }
+    } catch (error) {
+      console.error('Error reverse geocoding:', error);
+      // Don't show error to user, just log it
+    }
+  };
+
+  const geocodeAddress = async () => {
+    const { city, state, country } = formData.officeLocation.address;
+    if (!city || !country) {
+      alert('Please enter at least city and country to get coordinates.');
+      return;
+    }
+
+    setLocationLoading(true);
+    try {
+      const address = `${city}, ${state}, ${country}`.replace(', ,', ',');
+      // Using a free geocoding service
+      const response = await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(address)}&key=YOUR_API_KEY&limit=1`);
+      
+      // Fallback to a free service that doesn't require API key
+      const fallbackResponse = await fetch(`https://api.bigdatacloud.net/data/geocode?query=${encodeURIComponent(address)}&localityLanguage=en`);
+      
+      if (fallbackResponse.ok) {
+        const data = await fallbackResponse.json();
+        if (data.results && data.results.length > 0) {
+          const location = data.results[0];
+          setFormData(prev => ({
+            ...prev,
+            officeLocation: {
+              ...prev.officeLocation,
+              lat: location.latitude || 0,
+              lng: location.longitude || 0
+            }
+          }));
+        }
+      }
+    } catch (error) {
+      console.error('Error geocoding address:', error);
+      alert('Error getting coordinates for the address. Please enter coordinates manually if needed.');
+    } finally {
+      setLocationLoading(false);
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { id, value } = e.target;
     
     if (id.startsWith('manager-shift-')) {
@@ -147,13 +234,27 @@ const ManagerModal: React.FC<ManagerModalProps> = ({
       });
     } else if (id.startsWith('manager-office-')) {
       const field = id.replace('manager-office-', '');
-      setFormData({
-        ...formData,
-        officeLocation: {
-          ...formData.officeLocation,
-          [field]: parseFloat(value) || 0
-        }
-      });
+      if (field === 'lat' || field === 'lng') {
+        setFormData({
+          ...formData,
+          officeLocation: {
+            ...formData.officeLocation,
+            [field]: parseFloat(value) || 0
+          }
+        });
+      } else {
+        // Handle address fields
+        setFormData({
+          ...formData,
+          officeLocation: {
+            ...formData.officeLocation,
+            address: {
+              ...formData.officeLocation.address,
+              [field]: value
+            }
+          }
+        });
+      }
     } else {
       setFormData({
         ...formData,
@@ -341,44 +442,119 @@ const ManagerModal: React.FC<ManagerModalProps> = ({
             </div>
           </div>
           
-          {/* Office Coordinates Section - For Attendance Tracking */}
+          {/* Office Location Section - For Attendance Tracking */}
           <div className="border-t pt-4 mt-4">
-            <h4 className="text-md font-semibold mb-2">Office Location Coordinates</h4>
-            <p className="text-sm text-gray-500 mb-2">These coordinates will be used for attendance tracking</p>
-            <div className="grid grid-cols-2 gap-4 mb-2">
-              <div>
-                <label className="block text-gray-700">Latitude</label>
-                <input 
-                  type="number" 
-                  id="manager-office-lat" 
-                  className="w-full p-2 border rounded" 
-                  step="any"
-                  value={formData.officeLocation.lat}
-                  onChange={handleChange}
-                />
+            <h4 className="text-md font-semibold mb-2">Office Location</h4>
+            <p className="text-sm text-gray-500 mb-3">Enter your office address for attendance tracking</p>
+            
+            {/* Address Fields */}
+            <div className="space-y-3 mb-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-gray-700 text-sm font-medium">City</label>
+                  <input 
+                    type="text" 
+                    id="manager-office-city" 
+                    className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                    placeholder="Enter city"
+                    value={formData.officeLocation.address.city}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-700 text-sm font-medium">State/Province</label>
+                  <input 
+                    type="text" 
+                    id="manager-office-state" 
+                    className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                    placeholder="Enter state"
+                    value={formData.officeLocation.address.state}
+                    onChange={handleChange}
+                  />
+                </div>
               </div>
               <div>
-                <label className="block text-gray-700">Longitude</label>
+                <label className="block text-gray-700 text-sm font-medium">Country</label>
                 <input 
-                  type="number" 
-                  id="manager-office-lng" 
-                  className="w-full p-2 border rounded" 
-                  step="any"
-                  value={formData.officeLocation.lng}
+                  type="text" 
+                  id="manager-office-country" 
+                  className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                  placeholder="Enter country"
+                  value={formData.officeLocation.address.country}
                   onChange={handleChange}
                 />
               </div>
             </div>
-            <button 
-              type="button" 
-              className="neo-button secondary w-full mt-2"
-              onClick={getCurrentLocation}
-              disabled={locationLoading}
-            >
-              {locationLoading ? 'Getting Location...' : 'Get Current Location'}
-            </button>
+
+            {/* Action Buttons */}
+            <div className="grid grid-cols-2 gap-2 mb-4">
+              <button 
+                type="button" 
+                className="neo-button secondary text-sm py-2"
+                onClick={getCurrentLocation}
+                disabled={locationLoading}
+              >
+                <i className="bi bi-geo-alt mr-1"></i>
+                {locationLoading ? 'Getting Location...' : 'Auto-detect Location'}
+              </button>
+              <button 
+                type="button" 
+                className="neo-button secondary text-sm py-2"
+                onClick={geocodeAddress}
+                disabled={locationLoading || !formData.officeLocation.address.city || !formData.officeLocation.address.country}
+              >
+                <i className="bi bi-search mr-1"></i>
+                Get Coordinates
+              </button>
+            </div>
+
+            {/* Coordinates Display/Input */}
+            <div className="bg-gray-50 p-3 rounded border">
+              <label className="block text-gray-600 text-sm font-medium mb-2">
+                <i className="bi bi-crosshair mr-1"></i>
+                Coordinates (for precise attendance tracking)
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-gray-600 text-xs">Latitude</label>
+                  <input 
+                    type="number" 
+                    id="manager-office-lat" 
+                    className="w-full p-2 border rounded text-sm" 
+                    step="any"
+                    placeholder="0.0000"
+                    value={formData.officeLocation.lat || ''}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-600 text-xs">Longitude</label>
+                  <input 
+                    type="number" 
+                    id="manager-office-lng" 
+                    className="w-full p-2 border rounded text-sm" 
+                    step="any"
+                    placeholder="0.0000"
+                    value={formData.officeLocation.lng || ''}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
+              {(formData.officeLocation.lat !== 0 || formData.officeLocation.lng !== 0) && (
+                <p className="text-xs text-green-600 mt-1">
+                  <i className="bi bi-check-circle mr-1"></i>
+                  Coordinates set for attendance tracking
+                </p>
+              )}
+            </div>
+
             {locationLoading && (
-              <p className="text-gray-500 text-sm mt-1">Fetching your current location...</p>
+              <div className="text-center mt-2">
+                <p className="text-gray-500 text-sm">
+                  <i className="bi bi-arrow-clockwise spin mr-1"></i>
+                  Processing location...
+                </p>
+              </div>
             )}
           </div>
           

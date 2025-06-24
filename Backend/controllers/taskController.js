@@ -1,6 +1,8 @@
 const Task = require('../models/Task');
 const asyncHandler = require('express-async-handler');
 const mongoose = require('mongoose');
+const mlPredictor = require('../services/mlPredictor');
+const { sanitizeTaskData } = require('../utils/htmlSanitizer');
 
 /**
  * @desc    Get all tasks for an employee
@@ -105,10 +107,13 @@ const createTask = asyncHandler(async (req, res) => {
     throw new Error('Please provide all required fields');
   }
 
+  // Sanitize HTML content from title and description
+  const sanitizedData = sanitizeTaskData({ title, description });
+
   // Create task with current user as assignee and creator
   const task = await Task.create({
-    title,
-    description,
+    title: sanitizedData.title,
+    description: sanitizedData.description,
     priority: priority || 'medium',
     status: status || 'todo',
     dueDate,
@@ -149,18 +154,20 @@ const updateTask = asyncHandler(async (req, res) => {
   }
 
   // Update task
+  const updateData = {
+    title: req.body.title ? sanitizeTaskData({ title: req.body.title }).title : task.title,
+    description: req.body.description ? sanitizeTaskData({ description: req.body.description }).description : task.description,
+    priority: req.body.priority || task.priority,
+    status: req.body.status || task.status,
+    dueDate: req.body.dueDate || task.dueDate,
+    progress: req.body.progress !== undefined ? req.body.progress : task.progress,
+    subtasks: req.body.subtasks || task.subtasks,
+    timeSpent: req.body.timeSpent !== undefined ? req.body.timeSpent : task.timeSpent
+  };
+
   const updatedTask = await Task.findByIdAndUpdate(
     req.params.id,
-    {
-      title: req.body.title || task.title,
-      description: req.body.description || task.description,
-      priority: req.body.priority || task.priority,
-      status: req.body.status || task.status,
-      dueDate: req.body.dueDate || task.dueDate,
-      progress: req.body.progress !== undefined ? req.body.progress : task.progress,
-      subtasks: req.body.subtasks || task.subtasks,
-      timeSpent: req.body.timeSpent !== undefined ? req.body.timeSpent : task.timeSpent
-    },
+    updateData,
     { new: true }
   );
 
@@ -218,6 +225,17 @@ const updateTaskStatus = asyncHandler(async (req, res) => {
     updates,
     { new: true }
   );
+
+  // Automatically update AI model when task is completed
+  if (status === 'completed' && updatedTask.timeSpent > 0) {
+    try {
+      console.log(`Updating AI model with completed task: ${updatedTask.title}`);
+      await mlPredictor.updateWithNewData(updatedTask);
+    } catch (error) {
+      console.error('Error updating AI model automatically:', error);
+      // Don't fail the task update if AI update fails
+    }
+  }
 
   res.status(200).json(updatedTask);
 });
@@ -297,6 +315,17 @@ const updateTaskProgress = asyncHandler(async (req, res) => {
     updates,
     { new: true }
   );
+
+  // Automatically update AI model when task is completed (progress = 100)
+  if (progress === 100 && updatedTask.timeSpent > 0) {
+    try {
+      console.log(`Updating AI model with completed task: ${updatedTask.title}`);
+      await mlPredictor.updateWithNewData(updatedTask);
+    } catch (error) {
+      console.error('Error updating AI model automatically:', error);
+      // Don't fail the task update if AI update fails
+    }
+  }
 
   res.status(200).json(updatedTask);
 });

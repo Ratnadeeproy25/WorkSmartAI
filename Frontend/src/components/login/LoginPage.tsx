@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Helmet } from 'react-helmet';
 import { useAuth } from '../../context/AuthContext';
 import RoleSelector from './RoleSelector';
 import QRLogin from './QRLogin';
@@ -110,74 +111,79 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#e6eaf0] p-4">
-      <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-gray-800 mb-2">WorkSmart AI</h1>
-        <p className="text-gray-600 text-lg">Employee Management System</p>
+    <>
+      <Helmet>
+        <title>WorkSmart AI - Login</title>
+      </Helmet>
+      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#e6eaf0] p-4">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-gray-800 mb-2">WorkSmart AI</h1>
+          <p className="text-gray-600 text-lg">Employee Management System</p>
+        </div>
+        
+        <div className="w-full max-w-md">
+          {activeSection === 'role' && (
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+              <RoleSelector onRoleSelect={handleRoleSelect} />
+            </div>
+          )}
+          
+          {activeSection === 'email' && (
+            <EmailInput 
+              onSubmit={handleEmailSubmit}
+              onBack={() => setActiveSection('role')}
+              onSwitchToPassword={handleSwitchToPasswordFromEmail}
+              selectedRole={selectedRole}
+            />
+          )}
+          
+          {activeSection === 'qr' && (
+            <QRLogin
+              selectedRole={selectedRole}
+              userEmail={userEmail}
+              timeLeft={timeLeft}
+              isScanning={isScanning}
+              onScan={setIsScanning}
+              onSuccess={handleQrScanSuccess}
+              onToggleForm={() => setActiveSection('standard')}
+              onShowHelp={() => setActiveSection('help')}
+              onBack={() => setActiveSection('email')}
+              qrKey={qrKey}
+              qrOtp={qrOtp}
+            />
+          )}
+          
+          {activeSection === 'standard' && (
+            <StandardLogin
+              onSuccess={handlePasswordLoginSuccess}
+              onToggleForm={() => setActiveSection('email')}
+              onShowReset={() => setActiveSection('reset')}
+              onBack={() => setActiveSection('role')}
+            />
+          )}
+          
+          {activeSection === 'mfa' && (
+            <MFASection
+              timeLeft={mfaTimeLeft}
+              onSuccess={handleMfaVerified}
+              otp={qrOtp}
+              onBack={() => setActiveSection('qr')} // Go back to QR screen instead of role selection
+            />
+          )}
+          
+          {activeSection === 'reset' && (
+            <PasswordReset
+              onSuccess={() => setActiveSection('standard')}
+              onBack={() => setActiveSection('standard')}
+            />
+          )}
+          
+          {activeSection === 'help' && (
+            <HelpSection onBack={() => setActiveSection('qr')} />
+          )}
+        </div>
       </div>
-      
-      <div className="w-full max-w-md">
-        {activeSection === 'role' && (
-          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-            <RoleSelector onRoleSelect={handleRoleSelect} />
-          </div>
-        )}
-        
-        {activeSection === 'email' && (
-          <EmailInput 
-            onSubmit={handleEmailSubmit}
-            onBack={() => setActiveSection('role')}
-            onSwitchToPassword={handleSwitchToPasswordFromEmail}
-            selectedRole={selectedRole}
-          />
-        )}
-        
-        {activeSection === 'qr' && (
-          <QRLogin
-            selectedRole={selectedRole}
-            userEmail={userEmail}
-            timeLeft={timeLeft}
-            isScanning={isScanning}
-            onScan={setIsScanning}
-            onSuccess={handleQrScanSuccess}
-            onToggleForm={() => setActiveSection('standard')}
-            onShowHelp={() => setActiveSection('help')}
-            onBack={() => setActiveSection('email')}
-            qrKey={qrKey}
-            qrOtp={qrOtp}
-          />
-        )}
-        
-        {activeSection === 'standard' && (
-          <StandardLogin
-            onSuccess={handlePasswordLoginSuccess}
-            onToggleForm={() => setActiveSection('email')}
-            onShowReset={() => setActiveSection('reset')}
-            onBack={() => setActiveSection('role')}
-          />
-        )}
-        
-        {activeSection === 'mfa' && (
-          <MFASection
-            timeLeft={mfaTimeLeft}
-            onSuccess={handleMfaVerified}
-            otp={qrOtp}
-            onBack={() => setActiveSection('qr')} // Go back to QR screen instead of role selection
-          />
-        )}
-        
-        {activeSection === 'reset' && (
-          <PasswordReset
-            onSuccess={() => setActiveSection('standard')}
-            onBack={() => setActiveSection('standard')}
-          />
-        )}
-        
-        {activeSection === 'help' && (
-          <HelpSection onBack={() => setActiveSection('qr')} />
-        )}
-      </div>
-    </div>
+    </>
   );
 };
 

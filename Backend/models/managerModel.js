@@ -54,11 +54,24 @@ const managerSchema = new mongoose.Schema({
     type: String,
     default: ""
   },
+  shiftTime: {
+    start: { type: String, default: "09:00" },
+    end: { type: String, default: "17:00" }
+  },
   workLocation: {
     address: { type: String, default: "" },
     city: { type: String, default: "" },
     country: { type: String, default: "" },
     postalCode: { type: String, default: "" }
+  },
+  officeLocation: {
+    lat: { type: Number, default: 0 },
+    lng: { type: Number, default: 0 },
+    address: {
+      city: { type: String, default: "" },
+      state: { type: String, default: "" },
+      country: { type: String, default: "" }
+    }
   },
   assignedEmployees: {
     type: [String],

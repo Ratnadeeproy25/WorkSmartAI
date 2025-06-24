@@ -14,6 +14,11 @@ export interface Manager {
   officeLocation?: {
     lat: number;
     lng: number;
+    address?: {
+      city: string;
+      state: string;
+      country: string;
+    };
   };
 }
 
@@ -31,6 +36,11 @@ export interface ManagerFormData {
   officeLocation: {
     lat: number;
     lng: number;
+    address: {
+      city: string;
+      state: string;
+      country: string;
+    };
   };
 }
 

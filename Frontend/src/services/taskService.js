@@ -1,5 +1,6 @@
 import api from './api';
 import { getToken } from './authService';
+import aiService from './aiService';
 
 // Helper to get auth headers from the current token
 const getAuthHeaders = (role) => {
@@ -54,6 +55,18 @@ export const getTaskById = async (taskId) => {
 export const updateTaskStatus = async (taskId, status) => {
   try {
     const response = await api.patch(`/tasks/${taskId}/status`, { status }, { role: 'employee' });
+    
+    // Automatically trigger AI learning when task is completed
+    if (status === 'completed' && response.data.timeSpent > 0) {
+      try {
+        console.log('Triggering AI learning for completed task:', response.data.title);
+        await aiService.updateModelWithTaskData(taskId);
+      } catch (aiError) {
+        console.error('Error updating AI model (non-blocking):', aiError);
+        // Don't fail the task update if AI update fails
+      }
+    }
+    
     return response.data;
   } catch (error) {
     console.error('Error updating task status:', error);
@@ -65,6 +78,18 @@ export const updateTaskStatus = async (taskId, status) => {
 export const updateTaskProgress = async (taskId, progress) => {
   try {
     const response = await api.patch(`/tasks/${taskId}/progress`, { progress }, { role: 'employee' });
+    
+    // Automatically trigger AI learning when task is completed (progress = 100)
+    if (progress === 100 && response.data.timeSpent > 0) {
+      try {
+        console.log('Triggering AI learning for completed task:', response.data.title);
+        await aiService.updateModelWithTaskData(taskId);
+      } catch (aiError) {
+        console.error('Error updating AI model (non-blocking):', aiError);
+        // Don't fail the task update if AI update fails
+      }
+    }
+    
     return response.data;
   } catch (error) {
     console.error('Error updating task progress:', error);

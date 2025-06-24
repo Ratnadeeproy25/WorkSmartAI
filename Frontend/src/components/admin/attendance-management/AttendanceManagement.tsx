@@ -53,12 +53,18 @@ const AttendanceManagement: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [departments, setDepartments] = useState<string[]>([]);
+  const [isProcessingEndDay, setIsProcessingEndDay] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchAttendanceData = async () => {
       setLoading(true);
       setError(null);
       try {
+        console.log('Fetching attendance data...');
+        console.log('Employee filter options:', employeeFilterOptions);
+        console.log('Manager filter options:', managerFilterOptions);
+        
         // Fetch employee attendance
         const empRes = await attendanceService.getAllAttendanceRecords({
           ...employeeFilterOptions,
@@ -66,10 +72,13 @@ const AttendanceManagement: React.FC = () => {
           page: 1,
           limit: 100,
         });
+        
+        console.log('Employee attendance response:', empRes);
+        
         setEmployeeAttendance((empRes.data || []).map((record: any) => ({
-          id: record.employeeId?.id || record.employeeId?._id || record._id || '',
-          name: record.employeeId?.name || '',
-          department: record.employeeId?.department || '',
+          id: record.employeeId?.id || record.employeeId?._id || record._id || Math.random().toString(),
+          name: record.employeeId?.name || 'Unknown Employee',
+          department: record.employeeId?.department || 'Unknown Department',
           date: record.date ? new Date(record.date).toISOString().split('T')[0] : '',
           checkIn: record.checkIn ? new Date(record.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-',
           checkOut: record.checkOut ? new Date(record.checkOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-',
@@ -85,10 +94,14 @@ const AttendanceManagement: React.FC = () => {
           page: 1,
           limit: 100,
         });
+        
+        console.log('Manager attendance response:', mgrRes);
+        console.log('Manager attendance data count:', mgrRes.data?.length || 0);
+        
         setManagerAttendance((mgrRes.data || []).map((record: any) => ({
-          id: record.employeeId?.id || record.employeeId?._id || record._id || '',
-          name: record.employeeId?.name || '',
-          department: record.employeeId?.department || '',
+          id: record.employeeId?.id || record.employeeId?._id || record._id || Math.random().toString(),
+          name: record.employeeId?.name || 'Unknown Manager',
+          department: record.employeeId?.department || 'Unknown Department',
           date: record.date ? new Date(record.date).toISOString().split('T')[0] : '',
           checkIn: record.checkIn ? new Date(record.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-',
           checkOut: record.checkOut ? new Date(record.checkOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-',
@@ -96,7 +109,10 @@ const AttendanceManagement: React.FC = () => {
           workHours: record.workHours ? `${Math.floor(record.workHours)}h${Math.round((record.workHours % 1) * 60) > 0 ? ' ' + Math.round((record.workHours % 1) * 60) + 'm' : ''}` : '0h',
         })));
         setManagerStats(mgrRes.stats || { present: 0, absent: 0, late: 0, leave: 0 });
+        
+        console.log('Manager attendance records processed:', managerAttendance.length);
       } catch (err: any) {
+        console.error('Error fetching attendance data:', err);
         setError(err.message || 'Failed to fetch attendance data');
         setEmployeeAttendance([]);
         setManagerAttendance([]);
@@ -183,15 +199,15 @@ const AttendanceManagement: React.FC = () => {
   };
 
   // Action handlers
-  const handleViewAttendance = (id: number) => {
+  const handleViewAttendance = (id: string) => {
     alert(`Viewing attendance details for ID: ${id}`);
   };
 
-  const handleEditAttendance = (id: number) => {
+  const handleEditAttendance = (id: string) => {
     alert(`Editing attendance record for ID: ${id}`);
   };
 
-  const handleDeleteAttendance = (id: number) => {
+  const handleDeleteAttendance = (id: string) => {
     if (window.confirm('Are you sure you want to delete this attendance record?')) {
       alert(`Deleted attendance record for ID: ${id}`);
     }
@@ -209,9 +225,45 @@ const AttendanceManagement: React.FC = () => {
     alert('Generating attendance report...');
   };
 
+  const handleEndDay = async () => {
+    if (!window.confirm('Are you sure you want to end the day? This will automatically mark all users who haven\'t checked in as absent (or on leave if they have approved leave requests). This action cannot be undone.')) {
+      return;
+    }
+
+    setIsProcessingEndDay(true);
+    setError(null);
+    setSuccessMessage(null);
+
+    try {
+      const response = await attendanceService.endDay();
+      
+      if (response.success) {
+        setSuccessMessage(
+          `Day ended successfully! Processed ${response.data.processed} users:\n` +
+          `• ${response.data.marked_absent} marked as absent\n` +
+          `• ${response.data.marked_leave} marked as on leave\n` +
+          `• ${response.data.already_present} already had attendance records`
+        );
+        
+        // Refresh attendance data to show updated records
+        setTimeout(() => {
+          window.location.reload();
+        }, 3000);
+      } else {
+        throw new Error(response.message || 'Failed to end day');
+      }
+    } catch (err: any) {
+      console.error('Error ending day:', err);
+      setError(err.response?.data?.message || err.message || 'Failed to end day. Please try again.');
+    } finally {
+      setIsProcessingEndDay(false);
+    }
+  };
+
   return (
     <>
       <Helmet>
+        <title>WorkSmart AI - Attendance Management (Admin)</title>
         <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" />
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -434,7 +486,7 @@ const AttendanceManagement: React.FC = () => {
         <div className="main-content flex-1 p-8">
           <div className="container-fluid">
             {/* Header */}
-            <HeaderPanel />
+            <HeaderPanel onEndDay={handleEndDay} isProcessingEndDay={isProcessingEndDay} />
 
             {/* Tabs */}
             <TabGroup activeTab={activeTab} onTabChange={handleTabChange} />
@@ -507,7 +559,54 @@ const AttendanceManagement: React.FC = () => {
             </div>
 
             {loading && <div>Loading attendance data...</div>}
-            {error && <div style={{ color: 'red' }}>{error}</div>}
+            {error && (
+              <div className="mb-4 p-4 bg-red-100 border border-red-300 text-red-700 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <i className="bi bi-exclamation-triangle text-red-500 mt-0.5"></i>
+                  <div className="flex-1">
+                    <h4 className="font-semibold mb-1">Error</h4>
+                    <p>{error}</p>
+                  </div>
+                  <button
+                    onClick={() => setError(null)}
+                    className="text-red-500 hover:text-red-700 ml-2"
+                  >
+                    <i className="bi bi-x-lg"></i>
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            {isProcessingEndDay && (
+              <div className="mb-4 p-4 bg-blue-100 border border-blue-300 text-blue-700 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <i className="bi bi-arrow-repeat animate-spin text-blue-500"></i>
+                  <div>
+                    <h4 className="font-semibold">Processing End of Day</h4>
+                    <p>Checking all users and updating attendance records. This may take a few moments...</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {successMessage && (
+              <div className="mb-4 p-4 bg-green-100 border border-green-300 text-green-700 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <i className="bi bi-check-circle text-green-500 mt-0.5"></i>
+                  <div className="flex-1">
+                    <h4 className="font-semibold mb-1">Success</h4>
+                    <pre className="whitespace-pre-wrap text-sm">{successMessage}</pre>
+                    <p className="text-xs mt-2 text-green-600">Page will refresh in 3 seconds...</p>
+                  </div>
+                  <button
+                    onClick={() => setSuccessMessage(null)}
+                    className="text-green-500 hover:text-green-700 ml-2"
+                  >
+                    <i className="bi bi-x-lg"></i>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

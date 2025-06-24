@@ -14,7 +14,6 @@ import '../../../styles/NeomorphicUI.css';
 export interface FilterOptions {
   department: string;
   status: string;
-  role: string;
   searchQuery: string;
 }
 
@@ -26,7 +25,6 @@ const WellbeingManagement: React.FC = () => {
   const [filters, setFilters] = useState<FilterOptions>({
     department: 'all',
     status: 'all',
-    role: 'all',
     searchQuery: ''
   });
   const [filteredPeople, setFilteredPeople] = useState<Person[]>([]);
@@ -60,10 +58,6 @@ const WellbeingManagement: React.FC = () => {
 
   const applyFilters = useCallback(() => {
     let filtered = people;
-    
-    if (filters.role !== 'all') {
-      filtered = filtered.filter(e => e.role === filters.role);
-    }
     
     if (filters.department !== 'all') {
       filtered = filtered.filter(e => e.department.toLowerCase() === filters.department);

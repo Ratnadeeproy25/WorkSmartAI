@@ -13,14 +13,18 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({ onSubmit, leaveBala
     startDate: '',
     endDate: '',
     reason: '',
-    handoverPlan: ''
+    handoverPlan: '',
+    isBackdated: false
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target as HTMLInputElement;
+    setFormData(prev => ({ 
+      ...prev, 
+      [name]: type === 'checkbox' ? checked : value 
+    }));
     
     // Clear error when user starts typing again
     if (formError) {
@@ -74,8 +78,9 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({ onSubmit, leaveBala
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    if (startDate < today) {
-      setFormError('Start date cannot be in the past');
+    // Only check for past dates if not backdated
+    if (!formData.isBackdated && startDate < today) {
+      setFormError('Start date cannot be in the past. Check "Backdated Leave" if you need to apply for past dates.');
       return false;
     }
 
@@ -107,13 +112,20 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({ onSubmit, leaveBala
     setIsSubmitting(true);
     
     try {
-      await onSubmit({
+      const submitData = {
         type: formData.type as LeaveType,
         duration: formData.duration as DurationType,
         startDate: formData.startDate,
         endDate: formData.endDate,
         reason: formData.reason.trim() + (formData.handoverPlan ? `\n\nHandover Plan: ${formData.handoverPlan.trim()}` : '')
-      });
+      };
+
+      // Add backdated flag if applicable
+      if (formData.isBackdated) {
+        (submitData as any).isBackdated = true;
+      }
+
+      await onSubmit(submitData);
       
       // Reset form on successful submission
       setFormData({
@@ -122,7 +134,8 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({ onSubmit, leaveBala
         startDate: '',
         endDate: '',
         reason: '',
-        handoverPlan: ''
+        handoverPlan: '',
+        isBackdated: false
       });
       
       // Show success notification
@@ -210,7 +223,7 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({ onSubmit, leaveBala
               value={formData.startDate}
               onChange={handleChange}
               disabled={isSubmitting}
-              min={new Date().toISOString().split('T')[0]}
+              min={formData.isBackdated ? undefined : new Date().toISOString().split('T')[0]}
             />
           </div>
           <div>
@@ -223,9 +236,32 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({ onSubmit, leaveBala
               value={formData.endDate}
               onChange={handleChange}
               disabled={isSubmitting}
-              min={formData.startDate || new Date().toISOString().split('T')[0]}
+              min={formData.startDate || (formData.isBackdated ? undefined : new Date().toISOString().split('T')[0])}
             />
           </div>
+        </div>
+        
+        {/* Backdated Leave Option */}
+        <div className="border-t pt-4">
+          <label className="flex items-center space-x-3">
+            <input
+              type="checkbox"
+              name="isBackdated"
+              checked={formData.isBackdated}
+              onChange={handleChange}
+              disabled={isSubmitting}
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            />
+            <span className="text-gray-700 font-medium">Backdated Leave Application</span>
+          </label>
+          <p className="text-sm text-gray-500 mt-1 ml-7">
+            Check this box if you're applying for leave that has already occurred or for dates in the past.
+            {formData.isBackdated && (
+              <span className="block text-orange-600 font-medium mt-1">
+                ⚠️ Backdated applications may require additional justification and approval.
+              </span>
+            )}
+          </p>
         </div>
         
         {/* Leave balance information */}

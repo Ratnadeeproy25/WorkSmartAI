@@ -7,12 +7,14 @@ interface KanbanBoardProps {
   columns: { id: string; title: string; color: string }[];
   tasks: Task[];
   onStatusChange: (taskId: string, newStatus: TaskStatus) => void;
+  onTaskClick?: (taskId: string) => void;
 }
 
 const KanbanBoard: React.FC<KanbanBoardProps> = ({
   columns,
   tasks,
-  onStatusChange
+  onStatusChange,
+  onTaskClick
 }) => {
   // State to track the task being dragged
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
@@ -30,6 +32,17 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
   // Filter tasks for a specific column
   const getColumnTasks = (columnId: string) => {
     return tasks.filter(task => task.status === columnId);
+  };
+
+  // Handle task click
+  const handleTaskClick = (taskId: string) => {
+    // Find the task to check its status
+    const task = tasks.find(t => t.id === taskId);
+    
+    // Only allow editing if task is not completed
+    if (task && task.status !== 'completed' && onTaskClick) {
+      onTaskClick(taskId);
+    }
   };
 
   // Drag and drop event handlers
@@ -121,11 +134,12 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
               {getColumnTasks(column.id).map(task => (
                 <div 
                   key={task.id}
-                  className="task-container"
+                  className={`task-container ${task.status === 'completed' ? 'cursor-default' : 'cursor-pointer'}`}
                   data-task-id={task.id}
                   draggable
                   onDragStart={() => handleDragStart(task.id)}
                   onDragEnd={handleDragEnd}
+                  onClick={() => handleTaskClick(task.id)}
                 >
                   <TaskCard task={task} />
                 </div>

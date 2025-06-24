@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
+import { Helmet } from 'react-helmet';
 import Sidebar from '../Sidebar';
 import PageHeader from './PageHeader';
 import LeaveRequestForm from './LeaveRequestForm';
@@ -201,6 +202,9 @@ const LeaveReimbursementPage: React.FC = () => {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
+      <Helmet>
+        <title>WorkSmart AI - Leave & Reimbursements</title>
+      </Helmet>
       <Sidebar activeSection="leave-reimbursement" />
       
       <div className="flex-1 ml-64 px-4 py-8 md:px-8">

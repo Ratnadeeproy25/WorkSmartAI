@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet';
 import Sidebar from '../Sidebar';
 import MetricCard from './MetricCard';
 import TeamMembers from './TeamMembers';
@@ -122,139 +123,144 @@ const Dashboard: React.FC = () => {
   }, []);
 
   return (
-    <div className="manager-dashboard-container bg-[#e0e5ec] min-h-screen w-full overflow-x-hidden">
-      {/* Overlay for mobile sidebar */}
-      {sidebarOpen && window.innerWidth <= 1024 && (
+    <>
+      <Helmet>
+        <title>WorkSmart AI - Manager Dashboard</title>
+      </Helmet>
+      <div className="manager-dashboard-container bg-[#e0e5ec] min-h-screen w-full overflow-x-hidden">
+        {/* Overlay for mobile sidebar */}
+        {sidebarOpen && window.innerWidth <= 1024 && (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 z-40 sidebar-overlay"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+        
+        {/* Sidebar */}
+        <div className={`sidebar fixed h-full transition-all duration-300 z-50 ${sidebarOpen ? '' : '-translate-x-full'}`}>
+          <Sidebar />
+        </div>
+        
+        {/* Main Content */}
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 sidebar-overlay"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-      
-      {/* Sidebar */}
-      <div className={`sidebar fixed h-full transition-all duration-300 z-50 ${sidebarOpen ? '' : '-translate-x-full'}`}>
-        <Sidebar />
-      </div>
-      
-      {/* Main Content */}
-      <div 
-        className="main-content transition-all duration-300 py-6 px-4 md:px-6" 
-        style={{ marginLeft: sidebarOpen && window.innerWidth > 1024 ? '250px' : '0' }}
-      >
-        <div className="max-w-7xl mx-auto fade-in">
-          {/* Header */}
-          <div className="neo-box p-5 md:p-6 mb-8 dashboard-header">
-            <div className="flex justify-between items-center">
-              <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dashboard-title">Manager Dashboard</h1>
-                <p className="text-md md:text-lg text-gray-600 dashboard-subtitle">
-                  Welcome back, {dashboardData?.manager?.name || userName || 'Manager'}
-                </p>
-                {dashboardData?.manager?.department && (
-                  <p className="text-sm text-gray-500">
-                    {dashboardData.manager.position} - {dashboardData.manager.department}
+          className="main-content transition-all duration-300 py-6 px-4 md:px-6" 
+          style={{ marginLeft: sidebarOpen && window.innerWidth > 1024 ? '250px' : '0' }}
+        >
+          <div className="max-w-7xl mx-auto fade-in">
+            {/* Header */}
+            <div className="neo-box p-5 md:p-6 mb-8 dashboard-header">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dashboard-title">Manager Dashboard</h1>
+                  <p className="text-md md:text-lg text-gray-600 dashboard-subtitle">
+                    Welcome back, {dashboardData?.manager?.name || userName || 'Manager'}
                   </p>
-                )}
-              </div>
-              <div className="flex gap-3 md:gap-4">
-                <Link to="/manager/profile" className="neo-button p-3 scale-on-hover" aria-label="Settings">
-                  <i className="bi bi-gear text-xl"></i>
-                </Link>
-                <button 
-                  onClick={fetchDashboardData}
-                  className="neo-button p-3 scale-on-hover" 
-                  aria-label="Refresh"
-                  disabled={loading}
-                >
-                  <i className={`bi bi-arrow-clockwise text-xl ${loading ? 'animate-spin' : ''}`}></i>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Error Message */}
-          {error && (
-            <div className="neo-box p-4 mb-8 bg-red-50 border-red-200">
-              <div className="flex items-center">
-                <i className="bi bi-exclamation-triangle text-red-500 mr-2"></i>
-                <span className="text-red-700">{error}</span>
-                <button 
-                  onClick={fetchDashboardData}
-                  className="ml-auto text-red-600 hover:text-red-800"
-                >
-                  Try Again
-                </button>
+                  {dashboardData?.manager?.department && (
+                    <p className="text-sm text-gray-500">
+                      {dashboardData.manager.position} - {dashboardData.manager.department}
+                    </p>
+                  )}
+                </div>
+                <div className="flex gap-3 md:gap-4">
+                  <Link to="/manager/profile" className="neo-button p-3 scale-on-hover" aria-label="Settings">
+                    <i className="bi bi-gear text-xl"></i>
+                  </Link>
+                  <button 
+                    onClick={fetchDashboardData}
+                    className="neo-button p-3 scale-on-hover" 
+                    aria-label="Refresh"
+                    disabled={loading}
+                  >
+                    <i className={`bi bi-arrow-clockwise text-xl ${loading ? 'animate-spin' : ''}`}></i>
+                  </button>
+                </div>
               </div>
             </div>
-          )}
 
-          {/* Quick Stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8 stats-grid">
-            <div className="stagger-item">
-              <MetricCard 
-                value={loading ? '...' : metrics.totalEmployees} 
-                label="Total Employees" 
-                className="text-primary" 
-                icon="bi-people"
-                trend={{ value: 3, isPositive: true }}
-              />
-            </div>
-            <div className="stagger-item">
-              <MetricCard 
-                value={loading ? '...' : metrics.attendanceRate} 
-                label="Attendance Rate" 
-                className="text-success" 
-                icon="bi-calendar-check"
-                trend={{ value: 2, isPositive: true }}
-              />
-            </div>
-            <div className="stagger-item">
-              <MetricCard 
-                value={loading ? '...' : metrics.activeTasks} 
-                label="Active Tasks" 
-                className="text-purple-600" 
-                icon="bi-list-task"
-                trend={{ value: 5, isPositive: false }}
-              />
-            </div>
-            <div className="stagger-item">
-              <MetricCard 
-                value={loading ? '...' : metrics.pendingRequests} 
-                label="Pending Requests" 
-                className="text-warning" 
-                icon="bi-clock-history"
-                trend={{ value: 1, isPositive: true }}
-              />
-            </div>
-          </div>
+            {/* Error Message */}
+            {error && (
+              <div className="neo-box p-4 mb-8 bg-red-50 border-red-200">
+                <div className="flex items-center">
+                  <i className="bi bi-exclamation-triangle text-red-500 mr-2"></i>
+                  <span className="text-red-700">{error}</span>
+                  <button 
+                    onClick={fetchDashboardData}
+                    className="ml-auto text-red-600 hover:text-red-800"
+                  >
+                    Try Again
+                  </button>
+                </div>
+              </div>
+            )}
 
-          {/* Charts Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 chart-grid">
-            <div className="slide-in-left">
-              <PerformanceChart chartData={dashboardData?.chartData?.performance} />
+            {/* Quick Stats */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8 stats-grid">
+              <div className="stagger-item">
+                <MetricCard 
+                  value={loading ? '...' : metrics.totalEmployees} 
+                  label="Total Employees" 
+                  className="text-primary" 
+                  icon="bi-people"
+                  trend={{ value: 3, isPositive: true }}
+                />
+              </div>
+              <div className="stagger-item">
+                <MetricCard 
+                  value={loading ? '...' : metrics.attendanceRate} 
+                  label="Attendance Rate" 
+                  className="text-success" 
+                  icon="bi-calendar-check"
+                  trend={{ value: 2, isPositive: true }}
+                />
+              </div>
+              <div className="stagger-item">
+                <MetricCard 
+                  value={loading ? '...' : metrics.activeTasks} 
+                  label="Active Tasks" 
+                  className="text-purple-600" 
+                  icon="bi-list-task"
+                  trend={{ value: 5, isPositive: false }}
+                />
+              </div>
+              <div className="stagger-item">
+                <MetricCard 
+                  value={loading ? '...' : metrics.pendingRequests} 
+                  label="Pending Requests" 
+                  className="text-warning" 
+                  icon="bi-clock-history"
+                  trend={{ value: 1, isPositive: true }}
+                />
+              </div>
             </div>
-            <div className="slide-in-right">
-              <TaskDistributionChart chartData={dashboardData?.chartData?.taskDistribution} />
-            </div>
-          </div>
 
-          {/* Additional Charts */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mt-8 chart-grid">
-            <div className="slide-in-left">
-              <AttendanceChart chartData={dashboardData?.chartData?.attendance} />
+            {/* Charts Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 chart-grid">
+              <div className="slide-in-left">
+                <PerformanceChart chartData={dashboardData?.chartData?.performance} />
+              </div>
+              <div className="slide-in-right">
+                <TaskDistributionChart chartData={dashboardData?.chartData?.taskDistribution} />
+              </div>
             </div>
-            <div className="slide-in-right">
-              <ProductivityChart chartData={dashboardData?.chartData?.productivity} />
-            </div>
-          </div>
 
-          {/* Team Members Section */}
-          <div className="mt-8 slide-in-up">
-            <TeamMembers teamMembers={dashboardData?.teamMembers} loading={loading} />
+            {/* Additional Charts */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mt-8 chart-grid">
+              <div className="slide-in-left">
+                <AttendanceChart chartData={dashboardData?.chartData?.attendance} />
+              </div>
+              <div className="slide-in-right">
+                <ProductivityChart chartData={dashboardData?.chartData?.productivity} />
+              </div>
+            </div>
+
+            {/* Team Members Section */}
+            <div className="mt-8 slide-in-up">
+              <TeamMembers teamMembers={dashboardData?.teamMembers} loading={loading} />
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

@@ -7,6 +7,41 @@ export interface LocationData {
   };
 }
 
+export interface EnhancedCheckInData extends LocationData {
+  employeeId: string;
+  shiftTime?: {
+    start: string;
+    end: string;
+  };
+  officeLocation?: {
+    lat: number;
+    lng: number;
+    address?: {
+      city: string;
+      state: string;
+      country: string;
+    };
+  };
+}
+
+export interface EnhancedCheckOutData extends LocationData {
+  employeeId: string;
+  checkInTime: Date;
+  shiftTime?: {
+    start: string;
+    end: string;
+  };
+  officeLocation?: {
+    lat: number;
+    lng: number;
+    address?: {
+      city: string;
+      state: string;
+      country: string;
+    };
+  };
+}
+
 export interface AttendanceRecord {
   date: string;
   checkIn: string;
@@ -55,5 +90,10 @@ export interface Employee {
   officeLocation?: {
     lat: number;
     lng: number;
+    address?: {
+      city: string;
+      state: string;
+      country: string;
+    };
   };
 } 

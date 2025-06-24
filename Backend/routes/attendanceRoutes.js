@@ -13,7 +13,8 @@ const {
   getDepartmentAttendanceStats,
   getAttendanceTrends,
   getMonthlyAttendanceStats,
-  getAttendanceDistribution
+  getAttendanceDistribution,
+  endDay
 } = require('../controllers/attendanceController');
 
 // Employee routes
@@ -26,6 +27,7 @@ router.get('/stats', protect, getAttendanceStats);
 
 // Admin routes for attendance records and analytics
 router.get('/all', protect, adminOnly, getAllAttendanceRecords);
+router.post('/end-day', protect, adminOnly, endDay);
 
 // Analytics routes (Admin only)
 router.get('/analytics', protect, adminOnly, getAttendanceAnalytics);

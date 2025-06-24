@@ -3,7 +3,9 @@ import CheckInOutControls from './CheckInOutControls';
 import CurrentStatus from './CurrentStatus';
 import { LocationData } from '../../employee/Attendance/types';
 import { AttendanceTrackingProps } from './types';
+import { AttendanceStatus } from '../../admin/attendance-management/types';
 import managerAttendanceService from '../../../services/managerAttendanceService';
+import { getManagerById } from '../../../services/managerService';
 
 interface ManagerAttendanceRecord {
   date: string;
@@ -14,6 +16,20 @@ interface ManagerAttendanceRecord {
   managerId: string;
 }
 
+interface Manager {
+  id: string;
+  name: string;
+  email: string;
+  department?: string;
+  position?: string;
+  shiftTime?: { start: string; end: string };
+  officeLocation?: { 
+    lat: number; 
+    lng: number; 
+    address?: { city: string; state: string; country: string } 
+  };
+}
+
 const AttendanceTracking: React.FC<AttendanceTrackingProps> = ({ teamData }) => {
   const [workHours, setWorkHours] = useState(0);
   const [checkedIn, setCheckedIn] = useState(false);
@@ -21,19 +37,47 @@ const AttendanceTracking: React.FC<AttendanceTrackingProps> = ({ teamData }) => 
   const [checkOutTime, setCheckOutTime] = useState<Date | null>(null);
   const [workTimer, setWorkTimer] = useState<NodeJS.Timeout | null>(null);
   const [currentLocation, setCurrentLocation] = useState<LocationData | null>(null);
+  const [locationStatus, setLocationStatus] = useState<string>('-');
   const [error, setError] = useState<string | null>(null);
   const [managerId, setManagerId] = useState<string>('');
+  const [manager, setManager] = useState<Manager | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [loading, setLoading] = useState(false);
 
-  // Initialize manager ID
+  // Initialize manager ID and load profile
   useEffect(() => {
-    const storedManager = localStorage.getItem('currentManager');
+    const storedManager = localStorage.getItem('managerUserData');
     if (storedManager) {
-      const manager = JSON.parse(storedManager);
-      setManagerId(manager.id);
+      const managerData = JSON.parse(storedManager);
+      setManagerId(managerData.id);
+      loadManagerProfile(managerData.id);
     }
   }, []);
+
+  // Function to load manager profile data
+  const loadManagerProfile = async (managerId: string) => {
+    try {
+      const profile = await getManagerById(managerId);
+      setManager({
+        id: profile.id,
+        name: profile.name,
+        email: profile.email,
+        department: profile.department,
+        position: profile.position,
+        shiftTime: profile.shiftTime || { start: '09:00', end: '17:00' },
+        officeLocation: profile.officeLocation || { lat: 0, lng: 0, address: { city: '', state: '', country: '' } }
+      });
+    } catch (error) {
+      console.error('Error loading manager profile:', error);
+      setManager({
+        id: managerId,
+        name: '',
+        email: '',
+        shiftTime: { start: '09:00', end: '17:00' },
+        officeLocation: { lat: 0, lng: 0, address: { city: '', state: '', country: '' } }
+      });
+    }
+  };
 
   // Load today's attendance status
   useEffect(() => {
@@ -74,10 +118,12 @@ const AttendanceTracking: React.FC<AttendanceTrackingProps> = ({ teamData }) => 
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         position => {
-          setCurrentLocation({
+          const location = {
             lat: position.coords.latitude,
             lng: position.coords.longitude
-          });
+          };
+          setCurrentLocation(location);
+          updateLocationStatus(location);
         },
         error => {
           console.error('Error getting location:', error);
@@ -92,7 +138,7 @@ const AttendanceTracking: React.FC<AttendanceTrackingProps> = ({ teamData }) => 
     } else {
       setError('Geolocation is not supported by this browser');
     }
-  }, []);
+  }, [manager]);
 
   // Start work timer
   const startWorkTimer = useCallback((startTime: Date) => {
@@ -214,6 +260,13 @@ const AttendanceTracking: React.FC<AttendanceTrackingProps> = ({ teamData }) => 
     return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
   };
 
+  // Update location status when manager profile or current location changes
+  useEffect(() => {
+    if (manager && currentLocation) {
+      updateLocationStatus(currentLocation);
+    }
+  }, [manager, currentLocation]);
+
   // Initialize location
   useEffect(() => {
     getLocation();
@@ -227,6 +280,34 @@ const AttendanceTracking: React.FC<AttendanceTrackingProps> = ({ teamData }) => 
       }
     };
   }, [workTimer]);
+
+  // Update location status with proper office location
+  const updateLocationStatus = (location: LocationData) => {
+    // Check if there's meaningful office location data (address OR coordinates)
+    const hasAddress = manager?.officeLocation?.address && (
+      manager.officeLocation.address.city || 
+      manager.officeLocation.address.state || 
+      manager.officeLocation.address.country
+    );
+    const hasCoordinates = manager?.officeLocation && (
+      manager.officeLocation.lat !== 0 || manager.officeLocation.lng !== 0
+    );
+
+    if (!hasAddress && !hasCoordinates) {
+      setLocationStatus('Remote');
+      return;
+    }
+
+    // If manager has office location configured, show as "At Office"
+    setLocationStatus('At Office');
+  };
+
+  // Get current status based on check-in/out times
+  const getCurrentStatus = (): AttendanceStatus => {
+    if (!checkInTime) return 'absent';
+    if (checkOutTime) return 'present';
+    return 'present';
+  };
 
   // If no team data is available yet
   if (!teamData) {
@@ -285,6 +366,17 @@ const AttendanceTracking: React.FC<AttendanceTrackingProps> = ({ teamData }) => 
             )}
           </div>
         </div>
+      </div>
+
+      <div className="mb-8">
+        <CurrentStatus 
+          hoursWorked={workHours.toFixed(2)} 
+          status={getCurrentStatus()}
+          locationStatus={locationStatus}
+          checkInTime={checkInTime?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          shiftTime={manager?.shiftTime}
+          officeLocation={manager?.officeLocation}
+        />
       </div>
 
       {/* Team Attendance Section */}

@@ -27,6 +27,14 @@ const TaskCard: React.FC<TaskCardProps> = ({
 
   // Memoize due date calculations
   const dueDateInfo = useMemo(() => {
+    // If task is completed, show completion status instead of due date
+    if (task.status === 'completed') {
+      return {
+        dueDateClass: 'text-green-600',
+        dueDateText: 'Completed'
+      };
+    }
+    
     const dueDate = new Date(task.dueDate);
     const now = new Date();
     const daysUntilDue = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
@@ -46,11 +54,11 @@ const TaskCard: React.FC<TaskCardProps> = ({
     }
     
     return { dueDateClass, dueDateText };
-  }, [task.dueDate]);
+  }, [task.dueDate, task.status]);
 
   return (
     <div 
-      className="task-card"
+      className={`task-card ${task.status === 'completed' ? 'opacity-75' : ''}`}
       data-task-id={task.id}
     >
       {/* Card header with title */}

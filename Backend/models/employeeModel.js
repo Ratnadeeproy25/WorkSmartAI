@@ -121,7 +121,12 @@ const employeeSchema = new mongoose.Schema({
   },
   officeLocation: {
     lat: { type: Number, default: 0 },
-    lng: { type: Number, default: 0 }
+    lng: { type: Number, default: 0 },
+    address: {
+      city: { type: String, default: "" },
+      state: { type: String, default: "" },
+      country: { type: String, default: "" }
+    }
   },
   technicalSkills: {
     type: [skillSchema],

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Helmet } from 'react-helmet';
 import Sidebar from '../Sidebar';
 import WellbeingHeader from './WellbeingHeader';
 import ManagerWellbeingOverview from './ManagerWellbeingOverview';
@@ -203,6 +204,9 @@ const WellbeingPage: React.FC = () => {
 
   return (
     <div className="bg-[#e0e5ec] min-h-screen w-full overflow-x-hidden">
+      <Helmet>
+        <title>WorkSmart AI - Wellbeing</title>
+      </Helmet>
       {/* Overlay for mobile sidebar */}
       {sidebarOpen && window.innerWidth <= 1024 && (
         <div 

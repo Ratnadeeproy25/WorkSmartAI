@@ -65,7 +65,16 @@ exports.createEmployee = async (req, res) => {
 // Get single employee
 exports.getEmployeeById = async (req, res) => {
   try {
-    const employee = await Employee.findOne({ id: req.params.id });
+    const { id } = req.params;
+    let employee;
+    
+    // First try to find by custom ID (like EM001)
+    employee = await Employee.findOne({ id: id });
+    
+    // If not found and the ID looks like a MongoDB ObjectId, try finding by _id
+    if (!employee && id.match(/^[0-9a-fA-F]{24}$/)) {
+      employee = await Employee.findById(id);
+    }
     
     if (!employee) {
       return res.status(404).json({ 

@@ -1,15 +1,18 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet';
 import Sidebar from '../Sidebar';
 import TaskHeader from './TaskHeader';
 import KanbanBoard from './KanbanBoard';
 import TaskModal from './TaskModal';
+import AIDashboard from '../../common/AIDashboard';
 import SearchFilterPanel from './SearchFilterPanel';
 import { Task, TaskStatus, TaskPriority } from './types';
 import { getTaskService } from '../../../services/taskServiceFactory';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import '../../../styles/employee/tasks.css';
 import '../../../styles/employee/dragdrop.css';
+import '../../../styles/NeomorphicUI.css';
 import { useAuth } from '../../../context/AuthContext';
 
 const TaskPage: React.FC = () => {
@@ -53,15 +56,11 @@ const TaskPage: React.FC = () => {
   useEffect(() => {
     const loadTasks = async () => {
       try {
-        // console.log('Fetching tasks for employee...');
         const fetchedTasks = await taskService.getTasks();
-        // console.log('Fetched tasks:', fetchedTasks);
-        
-        // Don't filter tasks - the backend should already filter by user
         setTasks(fetchedTasks);
       } catch (error) {
         console.error('Error fetching tasks:', error);
-        setTasks([]); // Show empty if backend fails
+        setTasks([]);
       }
     };
     
@@ -164,7 +163,9 @@ const TaskPage: React.FC = () => {
       setDateFilter('');
       setPriorityFilter('');
       setSearchTerm('');
+      // Filter tasks directly instead of using statusFilter
       setFilteredTasks(tasks.filter(t => t.status === status));
+      return;
     } else {
       clearFilters();
     }
@@ -175,30 +176,18 @@ const TaskPage: React.FC = () => {
     setSearchTerm('');
     setPriorityFilter('');
     setDateFilter('');
-    setFilteredTasks(tasks);
-  };
-
-  // Generate a task ID for fallback
-  const generateTaskId = () => {
-    return `task-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
   };
 
   // Update task status
   const updateTaskStatus = async (taskId: string, newStatus: TaskStatus) => {
     try {
-      // Call the API to update the task status
       const updatedTask = await taskService.updateTaskStatus(taskId, newStatus);
-      
-      // Update the local state with the updated task
       setTasks(prevTasks => 
         prevTasks.map(task => task.id === taskId ? updatedTask : task)
       );
-      
-      // Notify about the update
       window.dispatchEvent(new Event('employeeTasksUpdated'));
     } catch (error) {
       console.error('Error updating task status:', error);
-      // Fallback if API call fails
       setTasks(prevTasks => {
         const updatedTasks = prevTasks.map(task => {
           if (task.id === taskId) {
@@ -238,53 +227,20 @@ const TaskPage: React.FC = () => {
     
     setActiveTaskId(taskId);
     
-    // Create an interval to update the time spent every minute
     const timer = setInterval(async () => {
       try {
         const task = tasks.find(t => t.id === taskId);
         if (task) {
-          // Update time spent by adding one minute
-          const timeSpent = (task.timeSpent || 0) + 1;
-          
-          // Call the API to update the time spent
-          if (taskService.updateTaskTime) {
-            try {
-              const updatedTask = await taskService.updateTaskTime(taskId, timeSpent);
-              
-              // Update the local state with the updated task
-              setTasks(prevTasks => 
-                prevTasks.map(t => t.id === taskId ? updatedTask : t)
-              );
-            } catch (error) {
-              console.error('Error updating time spent:', error);
-              // Fallback if API call fails
-              setTasks(prevTasks => {
-                const updatedTasks = prevTasks.map(task => {
-                  if (task.id === taskId) {
-                    return { ...task, timeSpent: (task.timeSpent || 0) + 1 };
-                  }
-                  return task;
-                });
-                return updatedTasks;
-              });
-            }
-          } else {
-            // Method not available, just update local state
-            setTasks(prevTasks => {
-              const updatedTasks = prevTasks.map(task => {
-                if (task.id === taskId) {
-                  return { ...task, timeSpent: (task.timeSpent || 0) + 1 };
-                }
-                return task;
-              });
-              return updatedTasks;
-            });
-          }
+          const newTimeSpent = (task.timeSpent || 0) + 1;
+          // Update local state since updateTimeSpent might not exist
+          setTasks(prevTasks => 
+            prevTasks.map(t => t.id === taskId ? { ...t, timeSpent: newTimeSpent } : t)
+          );
         }
       } catch (error) {
-        console.error('Error in timer update:', error);
+        console.error('Error updating time spent:', error);
       }
-    }, 60000); // 60000 ms = 1 minute
+    }, 60000); // Update every minute
     
     setActiveTaskTimer(timer);
   };
@@ -299,82 +255,146 @@ const TaskPage: React.FC = () => {
   };
 
   return (
-    <div className="employee-tasks-container bg-[#e0e5ec] min-h-screen w-full overflow-x-hidden">
-      {/* Overlay for mobile sidebar */}
-      {sidebarOpen && window.innerWidth <= 1024 && (
+    <>
+      <Helmet>
+        <title>WorkSmart AI - Employee Tasks</title>
+      </Helmet>
+      <div className="employee-tasks-container bg-[#e0e5ec] min-h-screen w-full overflow-x-hidden">
+        {/* Overlay for mobile sidebar */}
+        {sidebarOpen && window.innerWidth <= 1024 && (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 z-40 sidebar-overlay"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+        
+        {/* Sidebar */}
+        <div className={`sidebar fixed h-full transition-all duration-300 z-50 ${sidebarOpen ? '' : '-translate-x-full'}`}>
+          <Sidebar />
+        </div>
+        
+        {/* Main Content */}
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-      
-      <Sidebar />
-      
-      {/* Main Content */}
-      <div 
-        className={`employee-main-content ${sidebarOpen && window.innerWidth > 1024 ? 'sidebar-open' : ''}`}
-      >
-        <div className="employee-content-wrapper max-w-7xl mx-auto">
-          {/* Sidebar Toggle for Mobile */}
-          {!sidebarOpen && (
-            <button 
-              className="fixed top-4 left-4 z-20 neo-button p-3 lg:hidden"
-              onClick={() => setSidebarOpen(true)}
-              aria-label="Open Sidebar"
-            >
-              <i className="bi bi-list text-2xl"></i>
-            </button>
-          )}
+          className="main-content transition-all duration-300 py-6 px-4 md:px-6" 
+          style={{ marginLeft: sidebarOpen && window.innerWidth > 1024 ? '250px' : '0' }}
+        >
+          <div className="max-w-7xl mx-auto fade-in">
+            {/* Sidebar Toggle for Mobile */}
+            {!sidebarOpen && (
+              <button 
+                className="fixed top-4 left-4 z-20 neo-button p-3 lg:hidden"
+                onClick={() => setSidebarOpen(true)}
+                aria-label="Open Sidebar"
+              >
+                <i className="bi bi-list text-2xl"></i>
+              </button>
+            )}
+            
+            {/* Task Header */}
+            <div className="neo-box p-5 md:p-6 mb-8">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h1 className="text-2xl md:text-3xl font-bold text-gray-800">My Tasks</h1>
+                  <p className="text-md md:text-lg text-gray-600">Track and manage your assigned tasks with AI insights</p>
+                </div>
+                <div className="flex gap-4">
+                  <Link to="/employee/profile" className="neo-button p-3 scale-on-hover" aria-label="Settings">
+                    <i className="bi bi-gear text-xl"></i>
+                  </Link>
+                </div>
+              </div>
+            </div>
 
-          {/* Page Header with Settings Button */}
-          <div className="employee-page-header">
-            <h1 className="text-2xl font-bold text-gray-700">Task Management</h1>
-            <div className="flex gap-4 actions">
-              <Link to="/employee/profile" className="neo-button">
-                <i className="bi bi-gear text-xl"></i>
-              </Link>
+            {/* Task Header Component */}
+            <div className="slide-in-up">
+              <TaskHeader
+                taskCounts={taskCounts}
+                onFilterByStatus={filterByStatus}
+              />
+            </div>
+
+            {/* Search and Filter Panel */}
+            <div className="slide-in-up">
+              <SearchFilterPanel
+                searchQuery={searchTerm}
+                priorityFilter={priorityFilter}
+                dateFilter={dateFilter}
+                onSearchChange={setSearchTerm}
+                onPriorityChange={setPriorityFilter}
+                onDateChange={setDateFilter}
+                onClearFilters={clearFilters}
+              />
+            </div>
+
+            {/* Kanban Board */}
+            <div className="slide-in-up">
+              <KanbanBoard 
+                tasks={filteredTasks}
+                columns={columns}
+                onStatusChange={updateTaskStatus}
+                onTaskClick={openTaskModal}
+              />
             </div>
           </div>
-        
-          {/* Task Header Component (My Tasks, Stats) */}
-          <div className="employee-task-header">
-            <TaskHeader
-              taskCounts={taskCounts}
-              onFilterByStatus={filterByStatus}
-            />
-          </div>
-        
-          {/* Search and Filter Panel */}
-          <div className="employee-search-filter-panel">
-            <SearchFilterPanel
-              searchQuery={searchTerm}
-              priorityFilter={priorityFilter}
-              dateFilter={dateFilter}
-              onSearchChange={setSearchTerm}
-              onPriorityChange={setPriorityFilter}
-              onDateChange={setDateFilter}
-              onClearFilters={clearFilters}
-            />
-          </div>
-
-          {/* Task Kanban Board */}
-          <div className="employee-kanban-section">
-            <KanbanBoard 
-              tasks={filteredTasks}
-              columns={columns}
-              onStatusChange={updateTaskStatus}
-            />
-          </div>
         </div>
-      </div>
 
-      {/* Task Modal */}
-      <TaskModal
-        isOpen={isModalOpen}
-        task={currentTask}
-        onClose={() => setIsModalOpen(false)}
-      />
-    </div>
+        {/* Task Modal */}
+        {isModalOpen && currentTask && (
+          <TaskModal 
+            isOpen={isModalOpen}
+            task={currentTask}
+            onClose={() => setIsModalOpen(false)}
+          />
+        )}
+
+        {/* AI Dashboard - Always shown */}
+        <AIDashboard 
+          userRole="employee"
+          onTaskAction={(action, taskId) => {
+            // Handle AI dashboard actions
+            if (action === 'view' || action === 'edit') {
+              openTaskModal(taskId);
+            }
+          }}
+        />
+
+        <style>
+          {`
+          .fade-in {
+            animation: fadeIn 0.5s ease-in;
+          }
+
+          .slide-in-up {
+            animation: slideInUp 0.6s ease-out;
+          }
+
+          @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+          }
+
+          @keyframes slideInUp {
+            from {
+              transform: translateY(30px);
+              opacity: 0;
+            }
+            to {
+              transform: translateY(0);
+              opacity: 1;
+            }
+          }
+
+          .scale-on-hover {
+            transition: transform 0.2s ease;
+          }
+
+          .scale-on-hover:hover {
+            transform: scale(1.05);
+          }
+          `}
+        </style>
+      </div>
+    </>
   );
 };
 

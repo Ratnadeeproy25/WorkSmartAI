@@ -4,9 +4,9 @@ import { AttendanceRecord } from './types';
 interface AttendanceTableProps {
   attendanceData: AttendanceRecord[];
   type: 'employee' | 'manager';
-  onView: (id: number) => void;
-  onEdit: (id: number) => void;
-  onDelete: (id: number) => void;
+  onView: (id: string) => void;
+  onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
 }
 
 const AttendanceTable: React.FC<AttendanceTableProps> = ({ 
@@ -58,49 +58,68 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({
             </tr>
           </thead>
           <tbody id={`${type}AttendanceTable`}>
-            {attendanceData.map((record) => (
-              <tr key={record.id} className="table-row">
-                <td className="p-3">
-                  <div className="flex items-center">
-                    <div className="w-8 h-8 rounded-full bg-gray-300 mr-3"></div>
-                    <div className="font-medium text-gray-700">{record.name}</div>
-                  </div>
-                </td>
-                <td className="p-3 text-gray-600">{record.department}</td>
-                <td className="p-3 text-gray-600">{record.date}</td>
-                <td className="p-3 text-gray-600">{record.checkIn}</td>
-                <td className="p-3 text-gray-600">{record.checkOut}</td>
-                <td className="p-3">
-                  <span className={`status-badge status-${record.status}`}>
-                    <i className={`bi ${statusIcons[record.status]}`}></i>
-                    {record.status}
-                  </span>
-                </td>
-                <td className="p-3 text-gray-600">{record.workHours}</td>
-                <td className="p-3">
-                  <div className="flex gap-2">
-                    <button 
-                      className="neo-button p-2" 
-                      onClick={() => onView(record.id)}
-                    >
-                      <i className="bi bi-eye text-blue-600"></i>
-                    </button>
-                    <button 
-                      className="neo-button p-2" 
-                      onClick={() => onEdit(record.id)}
-                    >
-                      <i className="bi bi-pencil text-yellow-600"></i>
-                    </button>
-                    <button 
-                      className="neo-button p-2" 
-                      onClick={() => onDelete(record.id)}
-                    >
-                      <i className="bi bi-trash text-red-600"></i>
-                    </button>
+            {attendanceData.length === 0 ? (
+              <tr>
+                <td colSpan={8} className="p-8 text-center text-gray-500">
+                  <div className="flex flex-col items-center gap-4">
+                    <i className="bi bi-inbox text-4xl text-gray-300"></i>
+                    <div>
+                      <h3 className="text-lg font-medium mb-2">No {type} attendance records found</h3>
+                      <p className="text-sm">
+                        {type === 'manager' 
+                          ? 'There are no manager attendance records for the current filters. Make sure managers have checked in/out using the attendance system.'
+                          : 'There are no employee attendance records for the current filters.'
+                        }
+                      </p>
+                    </div>
                   </div>
                 </td>
               </tr>
-            ))}
+            ) : (
+              attendanceData.map((record) => (
+                <tr key={record.id} className="table-row">
+                  <td className="p-3">
+                    <div className="flex items-center">
+                      <div className="w-8 h-8 rounded-full bg-gray-300 mr-3"></div>
+                      <div className="font-medium text-gray-700">{record.name}</div>
+                    </div>
+                  </td>
+                  <td className="p-3 text-gray-600">{record.department}</td>
+                  <td className="p-3 text-gray-600">{record.date}</td>
+                  <td className="p-3 text-gray-600">{record.checkIn}</td>
+                  <td className="p-3 text-gray-600">{record.checkOut}</td>
+                  <td className="p-3">
+                    <span className={`status-badge status-${record.status}`}>
+                      <i className={`bi ${statusIcons[record.status]}`}></i>
+                      {record.status}
+                    </span>
+                  </td>
+                  <td className="p-3 text-gray-600">{record.workHours}</td>
+                  <td className="p-3">
+                    <div className="flex gap-2">
+                      <button 
+                        className="neo-button p-2" 
+                        onClick={() => onView(record.id)}
+                      >
+                        <i className="bi bi-eye text-blue-600"></i>
+                      </button>
+                      <button 
+                        className="neo-button p-2" 
+                        onClick={() => onEdit(record.id)}
+                      >
+                        <i className="bi bi-pencil text-yellow-600"></i>
+                      </button>
+                      <button 
+                        className="neo-button p-2" 
+                        onClick={() => onDelete(record.id)}
+                      >
+                        <i className="bi bi-trash text-red-600"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

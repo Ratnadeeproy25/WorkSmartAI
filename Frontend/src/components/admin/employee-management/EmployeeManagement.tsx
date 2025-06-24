@@ -11,15 +11,17 @@ import {
   updateEmployee, 
   deleteEmployee, 
   toggleEmployeeStatus,
-  getAllDepartments,
+  getAllCombinedDepartments,
   generateEmployeeId
 } from '../../../services/employeeService';
+import { getAllManagers } from '../../../services/managerService';
 
 const EmployeeManagement: React.FC = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [departments, setDepartments] = useState<string[]>([]);
+  const [managers, setManagers] = useState<{ _id: string; name: string; department: string; position: string }[]>([]);
   const [selectedDepartment, setSelectedDepartment] = useState('All');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
@@ -35,11 +37,20 @@ const EmployeeManagement: React.FC = () => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const employeeData = await getAllEmployees();
-        setEmployees(employeeData);
+        const [employeeData, departmentData, managerData] = await Promise.all([
+          getAllEmployees(),
+          getAllCombinedDepartments(),
+          getAllManagers()
+        ]);
         
-        const departmentData = await getAllDepartments();
+        setEmployees(employeeData);
         setDepartments(departmentData);
+        setManagers(managerData.map(m => ({ 
+          _id: m._id, 
+          name: m.name, 
+          department: m.department, 
+          position: m.position 
+        })));
         
         setError(null);
       } catch (err) {
@@ -74,8 +85,20 @@ const EmployeeManagement: React.FC = () => {
     
     // Apply sorting
     filtered.sort((a, b) => {
+      // Helper to get manager name by ID
+      const getManagerName = (managerId?: string) => {
+        if (!managerId) return 'zzz'; // Put unassigned at the end
+        const manager = managers.find(mgr => mgr._id === managerId);
+        return manager ? manager.name.toLowerCase() : 'zzz';
+      };
+
       // Handle nested properties like shiftTime and workLocation
       const getSortValue = (employee: Employee, key: string) => {
+        // Special handling for manager field
+        if (key === 'manager') {
+          return getManagerName(employee.manager);
+        }
+
         // Check if the key contains a period (e.g., 'shiftTime.start')
         if (key.includes('.')) {
           const [parent, child] = key.split('.');
@@ -112,7 +135,7 @@ const EmployeeManagement: React.FC = () => {
     
     setFilteredEmployees(filtered);
     setCurrentPage(1);
-  }, [employees, searchQuery, selectedDepartment, sortColumn, sortDirection]);
+  }, [employees, searchQuery, selectedDepartment, sortColumn, sortDirection, managers]);
 
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
@@ -226,8 +249,9 @@ const EmployeeManagement: React.FC = () => {
   }
 
   return (
-    <>
+    <div className="flex h-screen bg-gray-100">
       <Helmet>
+        <title>WorkSmart AI - Employee Management (Admin)</title>
         <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" />
         <style>{`
@@ -236,62 +260,60 @@ const EmployeeManagement: React.FC = () => {
           }
         `}</style>
       </Helmet>
+      <AdminSidebar />
 
-      <div className="flex min-h-screen bg-[#e0e5ec]">
-        <AdminSidebar />
-
-        <div className="main-content flex-1 p-8">
-          <div className="max-w-7xl mx-auto">
-            {/* Header */}
-            <div className="neo-box p-6 mb-8">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-800">Employee Management</h1>
-                  <p className="text-lg text-gray-600">Manage employee records and performance</p>
-                </div>
-                <div className="flex gap-4">
-                  <button 
-                    id="add-employee-btn" 
-                    className="neo-button primary p-3"
-                    onClick={handleAddEmployee}
-                  >
-                    <i className="bi bi-plus-lg mr-2"></i>Add Employee
-                  </button>
-                </div>
+      <div className="main-content flex-1 p-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="neo-box p-6 mb-8">
+            <div className="flex justify-between items-center">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-800">Employee Management</h1>
+                <p className="text-lg text-gray-600">Manage employee records and performance</p>
+              </div>
+              <div className="flex gap-4">
+                <button 
+                  id="add-employee-btn" 
+                  className="neo-button primary p-3"
+                  onClick={handleAddEmployee}
+                >
+                  <i className="bi bi-plus-lg mr-2"></i>Add Employee
+                </button>
               </div>
             </div>
+          </div>
 
-            {/* Error message if any */}
-            {error && (
-              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
-                <p>{error}</p>
-              </div>
+          {/* Error message if any */}
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+              <p>{error}</p>
+            </div>
+          )}
+
+          {/* Search and Filters */}
+          <SearchAndFilters 
+            searchValue={searchQuery}
+            onSearchChange={handleSearchChange}
+            departments={departments}
+            selectedDepartment={selectedDepartment}
+            onDepartmentChange={handleDepartmentChange}
+          />
+
+          {/* Employee List */}
+          <div className="neo-box p-6">
+            <h2 className="text-2xl font-semibold text-gray-700 mb-6">Employee List</h2>
+            {employees.length === 0 && !isLoading ? (
+              <p className="text-center py-4">No employees found. Add your first employee!</p>
+            ) : (
+              <EmployeeTable 
+                employees={filteredEmployees}
+                onEdit={handleEditEmployee}
+                onToggleStatus={handleToggleStatus}
+                onDelete={handleDeleteEmployee}
+                onSort={handleSortTable}
+                managers={managers}
+              />
             )}
-
-            {/* Search and Filters */}
-            <SearchAndFilters 
-              searchValue={searchQuery}
-              onSearchChange={handleSearchChange}
-              departments={departments}
-              selectedDepartment={selectedDepartment}
-              onDepartmentChange={handleDepartmentChange}
-            />
-
-            {/* Employee List */}
-            <div className="neo-box p-6">
-              <h2 className="text-2xl font-semibold text-gray-700 mb-6">Employee List</h2>
-              {employees.length === 0 && !isLoading ? (
-                <p className="text-center py-4">No employees found. Add your first employee!</p>
-              ) : (
-                <EmployeeTable 
-                  employees={filteredEmployees}
-                  onEdit={handleEditEmployee}
-                  onToggleStatus={handleToggleStatus}
-                  onDelete={handleDeleteEmployee}
-                  onSort={handleSortTable}
-                />
-              )}
-            </div>
           </div>
         </div>
       </div>
@@ -305,7 +327,7 @@ const EmployeeManagement: React.FC = () => {
         onClose={handleCloseModal}
         onSave={handleSaveEmployee}
       />
-    </>
+    </div>
   );
 };
 

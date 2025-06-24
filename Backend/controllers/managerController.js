@@ -54,7 +54,26 @@ exports.createManager = async (req, res) => {
 // Get single manager
 exports.getManagerById = async (req, res) => {
   try {
-    const manager = await Manager.findOne({ id: req.params.id });
+    const { id } = req.params;
+    let manager;
+    
+    // First try to find by custom ID (like MG001) in Manager collection
+    manager = await Manager.findOne({ id: id });
+    
+    // If not found and the ID looks like a MongoDB ObjectId, try finding by _id
+    if (!manager && id.match(/^[0-9a-fA-F]{24}$/)) {
+      // Try Manager collection first
+      manager = await Manager.findById(id);
+      
+      // If not found in Manager collection, try Employee collection with manager role
+      if (!manager) {
+        const Employee = require('../models/employeeModel');
+        manager = await Employee.findOne({ 
+          _id: id,
+          role: 'manager'
+        });
+      }
+    }
     
     if (!manager) {
       return res.status(404).json({ 
@@ -182,7 +201,7 @@ exports.initializeManagerLeaveBalances = async (req, res) => {
     let existing = 0;
     let errors = 0;
     
-    // console.log(`🔄 Initializing leave balances for ${managers.length} managers...`);
+    // console.log(`�� Initializing leave balances for ${managers.length} managers...`);
     
     const results = await Promise.all(
       managers.map(async (manager) => {

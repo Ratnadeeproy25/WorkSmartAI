@@ -31,6 +31,17 @@ export const getEmployeeProfile = async (email: string): Promise<UserProfile> =>
   }
 };
 
+// Get employee by ID
+export const getEmployeeById = async (id: string): Promise<Employee> => {
+  try {
+    const response = await api.get<ApiResponse<Employee>>(`/employees/${id}`);
+    return response.data.data;
+  } catch (error) {
+    console.error('Error fetching employee by ID:', error);
+    throw error;
+  }
+};
+
 // Create new employee
 export const createEmployee = async (employeeData: EmployeeFormData): Promise<Employee> => {
   try {

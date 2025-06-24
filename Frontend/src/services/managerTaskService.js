@@ -1,4 +1,5 @@
 import api from './api';
+import aiService from './aiService';
 
 // Get all tasks created by the manager
 export const getManagerTasks = async () => {
@@ -75,6 +76,18 @@ export const createTask = async (taskData) => {
 export const updateTaskStatus = async (taskId, status) => {
   try {
     const response = await api.patch(`/manager/tasks/${taskId}/status`, { status }, { role: 'manager' });
+    
+    // Automatically trigger AI learning when task is completed
+    if (status === 'completed' && response.data.timeSpent > 0) {
+      try {
+        console.log('Manager triggering AI learning for completed task:', response.data.title);
+        await aiService.updateModelWithTaskData(taskId);
+      } catch (aiError) {
+        console.error('Error updating AI model (non-blocking):', aiError);
+        // Don't fail the task update if AI update fails
+      }
+    }
+    
     if (response.data && response.data.assignee) {
       window.dispatchEvent(new Event('employeeTasksUpdated'));
     }
@@ -89,6 +102,18 @@ export const updateTaskStatus = async (taskId, status) => {
 export const updateTask = async (taskId, taskData) => {
   try {
     const response = await api.put(`/manager/tasks/${taskId}`, taskData, { role: 'manager' });
+    
+    // Automatically trigger AI learning when task is completed
+    if (taskData.status === 'completed' && response.data.timeSpent > 0) {
+      try {
+        console.log('Manager triggering AI learning for completed task:', response.data.title);
+        await aiService.updateModelWithTaskData(taskId);
+      } catch (aiError) {
+        console.error('Error updating AI model (non-blocking):', aiError);
+        // Don't fail the task update if AI update fails
+      }
+    }
+    
     if (response.data && response.data.assignee) {
       window.dispatchEvent(new Event('employeeTasksUpdated'));
     }

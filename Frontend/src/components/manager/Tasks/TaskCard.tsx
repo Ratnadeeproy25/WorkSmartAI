@@ -38,13 +38,22 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onEdit, onDelete, onStatusCha
   const dueDate = new Date(task.dueDate);
   const now = new Date();
   const daysUntilDue = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-  const dueDateClass = daysUntilDue < 0 ? 'text-red-600' : 
-                      daysUntilDue <= 2 ? 'text-yellow-600' : 'text-gray-600';
   
-  const dueDateText = daysUntilDue < 0 ? 'Overdue' :
-                     daysUntilDue === 0 ? 'Due today' :
-                     daysUntilDue === 1 ? 'Due tomorrow' :
-                     `Due in ${daysUntilDue} days`;
+  // Determine date display based on task status
+  let dueDateClass, dueDateText;
+  
+  if (task.status === 'completed') {
+    dueDateClass = 'text-green-600';
+    dueDateText = 'Completed';
+  } else {
+    dueDateClass = daysUntilDue < 0 ? 'text-red-600' : 
+                   daysUntilDue <= 2 ? 'text-yellow-600' : 'text-gray-600';
+    
+    dueDateText = daysUntilDue < 0 ? 'Overdue' :
+                  daysUntilDue === 0 ? 'Due today' :
+                  daysUntilDue === 1 ? 'Due tomorrow' :
+                  `Due in ${daysUntilDue} days`;
+  }
 
   // Extract the first letter of the first and last name for the avatar
   const getInitials = (name: string) => {
@@ -61,13 +70,16 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onEdit, onDelete, onStatusCha
       <div className="flex justify-between items-start mb-3">
         <h4 className="font-semibold text-gray-700 text-md">{task.title}</h4>
         <div className="flex gap-2">
-          <button 
-            onClick={onEdit} 
-            className="text-gray-500 hover:text-gray-700"
-            aria-label="Edit task"
-          >
-            <i className="bi bi-pencil"></i>
-          </button>
+          {/* Only show edit button if task is not completed */}
+          {task.status !== 'completed' && (
+            <button 
+              onClick={onEdit} 
+              className="text-gray-500 hover:text-gray-700"
+              aria-label="Edit task"
+            >
+              <i className="bi bi-pencil"></i>
+            </button>
+          )}
           <button 
             onClick={onDelete} 
             className="text-gray-500 hover:text-red-500"

@@ -7,6 +7,7 @@ interface LeaveCalendarProps {
   leaveDates: Set<string>; // User-selected dates for leave requests
   approvedLeaveDates?: Set<string>; // Approved leave dates (read-only)
   onLeaveDatesChange: (dates: Set<string>) => void;
+  allowBackdated?: boolean; // Allow selection of past dates
 }
 
 interface CalendarEvent {
@@ -27,11 +28,13 @@ interface MonthCache {
   };
 }
 
-const LeaveCalendar: React.FC<LeaveCalendarProps> = ({ leaveDates, approvedLeaveDates, onLeaveDatesChange }) => {
+const LeaveCalendar: React.FC<LeaveCalendarProps> = ({ leaveDates, approvedLeaveDates, onLeaveDatesChange, allowBackdated = false }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [monthCache, setMonthCache] = useState<MonthCache>({});
+  const [enableBackdated, setEnableBackdated] = useState(allowBackdated);
   
   // Add cache for month data to prevent repeated API calls
   const cacheRef = useRef<MonthCache>({});
@@ -255,13 +258,15 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({ leaveDates, approvedLeave
       return;
     }
 
-    // Don't allow selecting dates in the past
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const selectedDate = new Date(date);
-    if (selectedDate < today) {
-      // console.log('Cannot select dates in the past:', date);
-      return;
+    // Don't allow selecting dates in the past unless backdated is enabled
+    if (!enableBackdated) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const selectedDate = new Date(date);
+      if (selectedDate < today) {
+        // console.log('Cannot select dates in the past:', date);
+        return;
+      }
     }
 
     const newLeaveDates = new Set(leaveDates);
@@ -405,18 +410,45 @@ Hours: ${event.workHours?.toFixed(2) || 'N/A'}`;
     <div className="neo-box p-6 mb-6">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-xl font-semibold text-gray-700">Attendance & Leave Calendar</h3>
-        <div className="flex space-x-2">
-          <button className="neo-button p-2" onClick={prevMonth}>
-            <i className="bi bi-chevron-left"></i>
-          </button>
-          <div className="flex items-center px-4 font-medium">
-            {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+        <div className="flex items-center space-x-4">
+          {/* Backdated Leave Toggle */}
+          <label className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={enableBackdated}
+              onChange={(e) => setEnableBackdated(e.target.checked)}
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            />
+            <span className="text-sm text-gray-700">Allow Backdated</span>
+          </label>
+          
+          <div className="flex space-x-2">
+            <button className="neo-button p-2" onClick={prevMonth}>
+              <i className="bi bi-chevron-left"></i>
+            </button>
+            <div className="flex items-center px-4 font-medium">
+              {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+            </div>
+            <button className="neo-button p-2" onClick={nextMonth}>
+              <i className="bi bi-chevron-right"></i>
+            </button>
           </div>
-          <button className="neo-button p-2" onClick={nextMonth}>
-            <i className="bi bi-chevron-right"></i>
-          </button>
         </div>
       </div>
+      
+      {enableBackdated && (
+        <div className="mb-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+          <div className="flex items-center space-x-2">
+            <i className="bi bi-exclamation-triangle text-orange-600"></i>
+            <span className="text-sm text-orange-700 font-medium">
+              Backdated mode enabled: You can now select past dates for leave applications.
+            </span>
+          </div>
+          <p className="text-xs text-orange-600 mt-1 ml-6">
+            Backdated applications may require additional justification and approval.
+          </p>
+        </div>
+      )}
       
       {loading && (
         <div className="text-center py-8">

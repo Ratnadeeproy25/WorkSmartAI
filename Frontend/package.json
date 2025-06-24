@@ -13,6 +13,7 @@
     "axios": "^1.9.0",
     "bootstrap-icons": "^1.11.1",
     "chart.js": "^4.4.9",
+    "framer-motion": "^12.15.0",
     "jspdf": "^3.0.1",
     "jspdf-autotable": "^5.0.2",
     "qrcode": "^1.5.4",

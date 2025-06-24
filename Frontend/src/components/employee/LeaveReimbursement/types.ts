@@ -11,6 +11,7 @@ export interface LeaveRequest {
   reason: string;
   status: LeaveStatus;
   createdAt: string;
+  isBackdated?: boolean;
 }
 
 export interface LeaveBalance {

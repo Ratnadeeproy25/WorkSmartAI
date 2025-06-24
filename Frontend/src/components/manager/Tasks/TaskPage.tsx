@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet';
 import Sidebar from '../Sidebar';
 import TaskHeader from './TaskHeader';
 import TaskStats from './TaskStats';
 import KanbanBoard from './KanbanBoard';
 import TaskModal from './TaskModal';
+import AIEnhancedTaskModal from './AIEnhancedTaskModal';
+import AIDashboard from '../../common/AIDashboard';
 import SearchFilterPanel from './SearchFilterPanel';
 import '../../../styles/NeomorphicUI.css';
 import '../../../styles/manager/index.css';
@@ -19,7 +22,7 @@ const TaskPage: React.FC = () => {
   const [assigneeFilter, setAssigneeFilter] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('');
   const [dateFilter, setDateFilter] = useState('');
-  
+
   // Handle sidebar and window resizing
   useEffect(() => {
     const handleResize = () => {
@@ -63,6 +66,9 @@ const TaskPage: React.FC = () => {
 
   return (
     <div className="manager-tasks-container bg-[#e0e5ec] min-h-screen w-full overflow-x-hidden">
+      <Helmet>
+        <title>WorkSmart AI - Task Management</title>
+      </Helmet>
       {/* Overlay for mobile sidebar */}
       {sidebarOpen && window.innerWidth <= 1024 && (
         <div 
@@ -98,14 +104,16 @@ const TaskPage: React.FC = () => {
             <div className="flex justify-between items-center">
               <div>
                 <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Manager Task Management</h1>
-                <p className="text-md md:text-lg text-gray-600">Manage and track team tasks</p>
+                <p className="text-md md:text-lg text-gray-600">Manage and track team tasks with AI assistance</p>
               </div>
               <div className="flex gap-4">
                 <button 
-                  className="neo-button primary px-4 py-2"
+                  className="neo-button primary px-4 py-2 flex items-center gap-2"
                   onClick={handleAddTask}
                 >
-                  <i className="bi bi-plus-lg mr-2"></i>Add Task
+                  <i className="bi bi-robot text-sm"></i>
+                  <i className="bi bi-plus-lg"></i>
+                  Add Task
                 </button>
                 <Link to="/manager/profile" className="neo-button p-3 scale-on-hover" aria-label="Settings">
                   <i className="bi bi-gear text-xl"></i>
@@ -147,13 +155,24 @@ const TaskPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Task Modal */}
+      {/* Task Modal - Always use AI Enhanced Modal */}
       {isTaskModalOpen && (
-        <TaskModal 
+        <AIEnhancedTaskModal 
           taskId={selectedTaskId} 
           onClose={handleCloseTaskModal} 
         />
       )}
+
+      {/* AI Dashboard */}
+      <AIDashboard 
+        userRole="manager"
+        onTaskAction={(action, taskId) => {
+          // Handle AI dashboard actions
+          if (action === 'edit') {
+            handleEditTask(taskId);
+          }
+        }}
+      />
     </div>
   );
 };

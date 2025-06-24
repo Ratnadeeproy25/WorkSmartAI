@@ -13,6 +13,11 @@ export interface Employee {
   officeLocation?: {
     lat: number;
     lng: number;
+    address?: {
+      city: string;
+      state: string;
+      country: string;
+    };
   };
   manager?: string;
 }
@@ -31,6 +36,11 @@ export interface EmployeeFormData {
   officeLocation: {
     lat: number;
     lng: number;
+    address: {
+      city: string;
+      state: string;
+      country: string;
+    };
   };
   manager?: string;
 }

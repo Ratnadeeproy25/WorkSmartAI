@@ -141,12 +141,12 @@ const AdvancedAnalytics: React.FC = () => {
   };
 
   return (
-    <div className="neo-box p-8">
+    <div className="bg-white p-8 rounded-lg shadow-md">
       <h2 className="text-2xl font-semibold text-gray-700 mb-6">Advanced Analytics</h2>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Team Attendance Patterns */}
-        <div className="neo-box p-4">
+        <div className="bg-white p-4 rounded-lg shadow-md">
           <h3 className="font-medium mb-4 text-gray-700">Team Attendance Patterns</h3>
           <div className="chart-container" style={{ height: '250px' }}>
             <Line data={teamPatternsData} options={lineChartOptions} />
@@ -157,7 +157,7 @@ const AdvancedAnalytics: React.FC = () => {
         </div>
         
         {/* Department Comparison */}
-        <div className="neo-box p-4">
+        <div className="bg-white p-4 rounded-lg shadow-md">
           <h3 className="font-medium mb-4 text-gray-700">Department Comparison</h3>
           <div className="chart-container" style={{ height: '250px' }}>
             <Bar data={departmentData} options={barChartOptions} />
@@ -168,7 +168,7 @@ const AdvancedAnalytics: React.FC = () => {
         </div>
         
         {/* Attendance Forecast */}
-        <div className="neo-box p-4">
+        <div className="bg-white p-4 rounded-lg shadow-md">
           <h3 className="font-medium mb-4 text-gray-700">Attendance Forecast</h3>
           <div className="chart-container" style={{ height: '250px' }}>
             <Line data={forecastData} options={forecastOptions} />
@@ -180,10 +180,10 @@ const AdvancedAnalytics: React.FC = () => {
       </div>
       
       {/* Insights and Recommendations */}
-      <div className="neo-box p-6 mt-6">
+      <div className="bg-white p-6 mt-6 rounded-lg shadow-md">
         <h3 className="text-xl font-semibold text-gray-700 mb-4">Key Insights</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="neo-box p-4">
+          <div className="bg-gray-50 p-4 rounded-lg">
             <h4 className="font-medium text-blue-600 mb-2">Strengths</h4>
             <ul className="list-disc pl-5 space-y-2 text-gray-600">
               <li>Overall attendance rate is excellent at 96%</li>
@@ -191,7 +191,7 @@ const AdvancedAnalytics: React.FC = () => {
               <li>Support team shows high engagement</li>
             </ul>
           </div>
-          <div className="neo-box p-4">
+          <div className="bg-gray-50 p-4 rounded-lg">
             <h4 className="font-medium text-amber-600 mb-2">Recommendations</h4>
             <ul className="list-disc pl-5 space-y-2 text-gray-600">
               <li>Consider flexible start times for Marketing team</li>

@@ -466,11 +466,31 @@ const getAttendanceStats = asyncHandler(async (req, res) => {
 // @route   GET /api/attendance/all
 // @access  Private (Admin)
 const getAllAttendanceRecords = asyncHandler(async (req, res) => {
-  const { date, department, status, search, role, page = 1, limit = 20 } = req.query;
+  const { date, startDate, endDate, department, status, search, role, page = 1, limit = 20 } = req.query;
   let attendanceQuery = {};
 
-  // Date filter - default to today if no date provided
-  if (date) {
+  // Date filter - handle both single date and date range
+  if (startDate && endDate) {
+    // Date range filtering
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    start.setHours(0, 0, 0, 0);
+    end.setHours(23, 59, 59, 999);
+    attendanceQuery.date = { $gte: start, $lte: end };
+  } else if (startDate) {
+    // Only start date provided
+    const start = new Date(startDate);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(start);
+    end.setHours(23, 59, 59, 999);
+    attendanceQuery.date = { $gte: start, $lte: end };
+  } else if (endDate) {
+    // Only end date provided
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
+    attendanceQuery.date = { $lte: end };
+  } else if (date) {
+    // Single date filtering (backwards compatibility)
     const queryDate = new Date(date);
     const startOfDay = new Date(queryDate.setHours(0, 0, 0, 0));
     const endOfDay = new Date(queryDate.setHours(23, 59, 59, 999));
@@ -1269,12 +1289,217 @@ function calculateWeeklyPatterns(records) {
   return Object.values(weeklyData);
 }
 
+// @desc    End day - process all attendance and mark absent/leave users
+// @route   POST /api/attendance/end-day
+// @access  Private (Admin)
+const endDay = asyncHandler(async (req, res) => {
+  try {
+    const Employee = require('../models/employeeModel');
+    const Manager = require('../models/managerModel');
+    const ManagerAttendance = require('../models/managerAttendanceModel');
+    const Leave = require('../models/leaveModel');
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    let processed = 0;
+    let marked_absent = 0;
+    let marked_leave = 0;
+    let already_present = 0;
+    
+    // Get all active employees
+    const employees = await Employee.find({ status: 'Active' });
+    
+    // Get all active managers
+    const managers = await Manager.find({ status: 'Active' });
+    
+    // Get all employees with manager role
+    const employeeManagers = await Employee.find({ 
+      status: 'Active', 
+      role: 'manager' 
+    });
+    
+    // Get all approved leave requests for today
+    const leaveRequests = await Leave.find({
+      startDate: { $lte: today },
+      endDate: { $gte: today },
+      status: 'approved'
+    }).populate('employeeId', '_id');
+    
+    // Get all approved manager leave requests for today  
+    const ManagerLeave = require('../models/managerLeaveModel');
+    const managerLeaveRequests = await ManagerLeave.find({
+      startDate: { $lte: today },
+      endDate: { $gte: today },
+      status: 'approved'
+    }).populate('managerId', '_id');
+    
+    // Create a set of user IDs who are on leave today
+    const usersOnLeave = new Set();
+    leaveRequests.forEach(leave => {
+      if (leave.employeeId) {
+        usersOnLeave.add(leave.employeeId._id.toString());
+      }
+    });
+    
+    managerLeaveRequests.forEach(leave => {
+      if (leave.managerId) {
+        usersOnLeave.add(leave.managerId._id.toString());
+      }
+    });
+    
+    // Process regular employees
+    for (const employee of employees) {
+      processed++;
+      
+      // Skip managers (they'll be processed separately)
+      if (employee.role === 'manager') {
+        continue;
+      }
+      
+      // Check if employee already has attendance record for today
+      const existingAttendance = await Attendance.findOne({
+        employeeId: employee._id,
+        date: { $gte: today, $lt: tomorrow }
+      });
+      
+      if (existingAttendance) {
+        already_present++;
+        continue;
+      }
+      
+      // Determine status based on leave
+      const isOnLeave = usersOnLeave.has(employee._id.toString());
+      const status = isOnLeave ? 'leave' : 'absent';
+      
+      // Create attendance record
+      const attendanceRecord = new Attendance({
+        employeeId: employee._id,
+        date: today,
+        status: status,
+        checkIn: null, // Always null for automated end-of-day records
+        checkOut: null,
+        workHours: 0,
+        location: null // Always null for automated end-of-day records
+      });
+      
+      await attendanceRecord.save();
+      
+      if (isOnLeave) {
+        marked_leave++;
+      } else {
+        marked_absent++;
+      }
+    }
+    
+    // Process dedicated managers
+    for (const manager of managers) {
+      processed++;
+      
+      // Check if manager already has attendance record for today
+      const existingAttendance = await ManagerAttendance.findOne({
+        managerId: manager._id,
+        date: { $gte: today, $lt: tomorrow }
+      });
+      
+      if (existingAttendance) {
+        already_present++;
+        continue;
+      }
+      
+      // Determine status based on leave
+      const isOnLeave = usersOnLeave.has(manager._id.toString());
+      const status = isOnLeave ? 'leave' : 'absent';
+      
+      // Create manager attendance record
+      const attendanceRecord = new ManagerAttendance({
+        managerId: manager._id,
+        date: today,
+        status: status,
+        checkIn: null, // Always null for automated end-of-day records
+        checkOut: null,
+        workHours: 0,
+        location: null // Always null for automated end-of-day records
+      });
+      
+      await attendanceRecord.save();
+      
+      if (isOnLeave) {
+        marked_leave++;
+      } else {
+        marked_absent++;
+      }
+    }
+    
+    // Process employee-managers
+    for (const employeeManager of employeeManagers) {
+      processed++;
+      
+      // Check if employee-manager already has attendance record for today
+      const existingAttendance = await Attendance.findOne({
+        employeeId: employeeManager._id,
+        date: { $gte: today, $lt: tomorrow }
+      });
+      
+      if (existingAttendance) {
+        already_present++;
+        continue;
+      }
+      
+      // Determine status based on leave
+      const isOnLeave = usersOnLeave.has(employeeManager._id.toString());
+      const status = isOnLeave ? 'leave' : 'absent';
+      
+      // Create attendance record
+      const attendanceRecord = new Attendance({
+        employeeId: employeeManager._id,
+        date: today,
+        status: status,
+        checkIn: null, // Always null for automated end-of-day records
+        checkOut: null,
+        workHours: 0,
+        location: null // Always null for automated end-of-day records
+      });
+      
+      await attendanceRecord.save();
+      
+      if (isOnLeave) {
+        marked_leave++;
+      } else {
+        marked_absent++;
+      }
+    }
+    
+    res.status(200).json({
+      success: true,
+      message: 'Day ended successfully',
+      data: {
+        processed,
+        marked_absent,
+        marked_leave,
+        already_present,
+        date: today.toISOString().split('T')[0]
+      }
+    });
+    
+  } catch (error) {
+    console.error('Error ending day:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error processing end of day',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
 module.exports = {
   checkIn,
   checkOut,
+  getTodayAttendance,
   getAttendanceByDate,
   getAttendanceByRange,
-  getTodayAttendance,
   getAttendanceStats,
   getAllAttendanceRecords,
   getAttendanceAnalytics,
@@ -1282,4 +1507,5 @@ module.exports = {
   getAttendanceTrends,
   getMonthlyAttendanceStats,
   getAttendanceDistribution,
+  endDay
 }; 

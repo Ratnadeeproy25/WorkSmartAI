@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Helmet } from 'react-helmet';
 import Sidebar from '../Sidebar';
 import PageHeader from './PageHeader';
 import WellbeingOverview from './WellbeingOverview';
@@ -295,6 +296,9 @@ const WellbeingPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#e0e5ec]">
+      <Helmet>
+        <title>WorkSmart AI - Employee Wellbeing</title>
+      </Helmet>
       <Sidebar />
       <div className="main-content p-6">
         <div className="max-w-7xl mx-auto">

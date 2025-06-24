@@ -21,8 +21,6 @@ const TaskModal: React.FC<TaskModalProps> = ({
 }) => {
   const auth = useAuth();
   const [status, setStatus] = useState('');
-  const [progress, setProgress] = useState(0);
-  const [timeSpent, setTimeSpent] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,8 +29,6 @@ const TaskModal: React.FC<TaskModalProps> = ({
     if (isOpen && task) {
       // Populate form with task data
         setStatus(task.status);
-        setProgress(task.progress || 0);
-      setTimeSpent(task.timeSpent || 0);
     }
   }, [isOpen, task]);
 
@@ -47,14 +43,6 @@ const TaskModal: React.FC<TaskModalProps> = ({
     try {
       // Update task status
       await taskService.updateTaskStatus(task.id, status);
-      
-      // Update task progress
-      await taskService.updateTaskProgress(task.id, progress);
-      
-      // Update time spent
-      if (typeof timeSpent === 'number' && timeSpent >= 0) {
-        await taskService.updateTaskTime(task.id, timeSpent);
-      }
       
       // Dispatch event to ensure UI updates
       window.dispatchEvent(new Event('employeeTasksUpdated'));
@@ -139,34 +127,6 @@ const TaskModal: React.FC<TaskModalProps> = ({
                 </select>
             </div>
 
-            {/* Progress Field - Editable */}
-            <div className="space-y-2">
-              <label className="block text-gray-700 font-medium">Progress</label>
-              <div className="flex items-center gap-4">
-                <input
-                  type="range"
-                  value={progress}
-                  onChange={(e) => setProgress(parseInt(e.target.value))}
-                  min="0"
-                  max="100"
-                  className="flex-1 h-2 rounded-lg appearance-none bg-[#e0e5ec] shadow-inner"
-                />
-                <span className="text-gray-700 font-medium">{progress}%</span>
-              </div>
-            </div>
-
-            {/* Time Spent Field - Editable */}
-            <div className="space-y-2">
-              <label className="block text-gray-700 font-medium">Time Spent (minutes)</label>
-              <input
-                type="number"
-                value={timeSpent}
-                onChange={(e) => setTimeSpent(parseInt(e.target.value))}
-                min="0"
-                className="w-full p-3 rounded-lg bg-[#e0e5ec] border-none outline-none shadow-inner"
-              />
-            </div>
-
             {/* Subtasks - Read Only */}
             {task.subtasks && task.subtasks.length > 0 && (
               <div className="space-y-2">
@@ -203,7 +163,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
             className="neo-button primary"
             disabled={isLoading}
             >
-            {isLoading ? 'Updating...' : 'Update Task Progress'}
+            {isLoading ? 'Updating...' : 'Update Task Status'}
             </button>
         </div>
       </div>

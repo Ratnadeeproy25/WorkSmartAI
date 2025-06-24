@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Helmet } from 'react-helmet';
 import Sidebar from '../Sidebar';
 import EmployeeDataHeader from './EmployeeDataHeader';
 import AttendanceSection from './AttendanceSection';
@@ -45,79 +46,84 @@ const EmployeeDataPage: React.FC = () => {
   };
 
   return (
-    <div className="bg-[#e0e5ec] min-h-screen w-full overflow-x-hidden">
-      {/* Overlay for mobile sidebar */}
-      {sidebarOpen && window.innerWidth <= 1024 && (
+    <>
+      <Helmet>
+        <title>WorkSmart AI - Employee Data (Manager)</title>
+      </Helmet>
+      <div className="bg-[#e0e5ec] min-h-screen w-full overflow-x-hidden">
+        {/* Overlay for mobile sidebar */}
+        {sidebarOpen && window.innerWidth <= 1024 && (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 z-40 sidebar-overlay"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+        
+        {/* Sidebar */}
+        <div className={`sidebar fixed h-full transition-all duration-300 z-50 ${sidebarOpen ? '' : '-translate-x-full'}`}>
+          <Sidebar />
+        </div>
+        
+        {/* Main Content */}
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 sidebar-overlay"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-      
-      {/* Sidebar */}
-      <div className={`sidebar fixed h-full transition-all duration-300 z-50 ${sidebarOpen ? '' : '-translate-x-full'}`}>
-        <Sidebar />
-      </div>
-      
-      {/* Main Content */}
-      <div 
-        className="main-content transition-all duration-300 py-6 px-4 md:px-6" 
-        style={{ marginLeft: sidebarOpen && window.innerWidth > 1024 ? '250px' : '0' }}
-      >
-        <div className="container mx-auto max-w-7xl fade-in">
-          {/* Sidebar Toggle for Mobile */}
-          {!sidebarOpen && (
-            <button 
-              className="fixed top-4 left-4 z-20 neo-button p-3 lg:hidden"
-              onClick={() => setSidebarOpen(true)}
-              aria-label="Open Sidebar"
-            >
-              <i className="bi bi-list text-2xl"></i>
-            </button>
-          )}
-          
-          {/* Header */}
-          <EmployeeDataHeader />
+          className="main-content transition-all duration-300 py-6 px-4 md:px-6" 
+          style={{ marginLeft: sidebarOpen && window.innerWidth > 1024 ? '250px' : '0' }}
+        >
+          <div className="container mx-auto max-w-7xl fade-in">
+            {/* Sidebar Toggle for Mobile */}
+            {!sidebarOpen && (
+              <button 
+                className="fixed top-4 left-4 z-20 neo-button p-3 lg:hidden"
+                onClick={() => setSidebarOpen(true)}
+                aria-label="Open Sidebar"
+              >
+                <i className="bi bi-list text-2xl"></i>
+              </button>
+            )}
+            
+            {/* Header */}
+            <EmployeeDataHeader />
 
-          {/* Tabs */}
-          <div className="flex flex-wrap gap-4 mb-8 slide-in-left">
-            <button 
-              className={`tab-button ${activeTab === 'attendance' ? 'active' : ''}`}
-              onClick={() => handleTabChange('attendance')}
-            >
-              Attendance
-            </button>
-            <button 
-              className={`tab-button ${activeTab === 'leave' ? 'active' : ''}`}
-              onClick={() => handleTabChange('leave')}
-            >
-              Leave & Reimbursement
-            </button>
-            <button 
-              className={`tab-button ${activeTab === 'wellbeing' ? 'active' : ''}`}
-              onClick={() => handleTabChange('wellbeing')}
-            >
-              Wellbeing
-            </button>
-          </div>
+            {/* Tabs */}
+            <div className="flex flex-wrap gap-4 mb-8 slide-in-left">
+              <button 
+                className={`tab-button ${activeTab === 'attendance' ? 'active' : ''}`}
+                onClick={() => handleTabChange('attendance')}
+              >
+                Attendance
+              </button>
+              <button 
+                className={`tab-button ${activeTab === 'leave' ? 'active' : ''}`}
+                onClick={() => handleTabChange('leave')}
+              >
+                Leave & Reimbursement
+              </button>
+              <button 
+                className={`tab-button ${activeTab === 'wellbeing' ? 'active' : ''}`}
+                onClick={() => handleTabChange('wellbeing')}
+              >
+                Wellbeing
+              </button>
+            </div>
 
-          {/* Attendance Section */}
-          <div className={`space-y-8 slide-in-up ${activeTab === 'attendance' ? '' : 'hidden'}`}>
-            <AttendanceSection />
-          </div>
+            {/* Attendance Section */}
+            <div className={`space-y-8 slide-in-up ${activeTab === 'attendance' ? '' : 'hidden'}`}>
+              <AttendanceSection />
+            </div>
 
-          {/* Leave & Reimbursement Section */}
-          <div className={`space-y-8 slide-in-up ${activeTab === 'leave' ? '' : 'hidden'}`}>
-            <LeaveSection />
-          </div>
+            {/* Leave & Reimbursement Section */}
+            <div className={`space-y-8 slide-in-up ${activeTab === 'leave' ? '' : 'hidden'}`}>
+              <LeaveSection />
+            </div>
 
-          {/* Wellbeing Section */}
-          <div className={`space-y-8 slide-in-up ${activeTab === 'wellbeing' ? '' : 'hidden'}`}>
-            <WellbeingSection />
+            {/* Wellbeing Section */}
+            <div className={`space-y-8 slide-in-up ${activeTab === 'wellbeing' ? '' : 'hidden'}`}>
+              <WellbeingSection />
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

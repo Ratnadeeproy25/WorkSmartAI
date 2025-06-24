@@ -11,16 +11,16 @@ const EmployeeWellbeing = require('../models/employeeWellbeingModel');
  */
 exports.getManagerDashboardData = async (req, res) => {
   try {
-    // console.log('🔍 Manager Dashboard Request - User ID:', req.user._id, 'Custom ID:', req.user.id);
+    console.log('🔍 Manager Dashboard Request - User ID:', req.user._id, 'Custom ID:', req.user.id);
     
     const managerId = req.user._id; // Get manager ID from authenticated user
     const managerCustomId = req.user.id; // Custom ID like MG001
 
-    // console.log('📋 Looking for manager with ID:', managerId);
+    console.log('📋 Looking for manager with ID:', managerId);
 
     // Get manager details - check both Manager collection and Employee collection
     let manager = await Manager.findById(managerId);
-    // console.log('🏢 Manager from Manager collection:', manager ? 'Found' : 'Not found');
+    console.log('🏢 Manager from Manager collection:', manager ? 'Found' : 'Not found');
     
     if (!manager) {
       // Try to find in Employee collection with manager role
@@ -28,43 +28,75 @@ exports.getManagerDashboardData = async (req, res) => {
         _id: managerId,
         role: 'manager'
       });
-      // console.log('👤 Manager from Employee collection:', manager ? 'Found' : 'Not found');
+      console.log('👤 Manager from Employee collection:', manager ? 'Found' : 'Not found');
     }
     
     if (!manager) {
-      // console.error('❌ Manager not found in either collection');
+      console.error('❌ Manager not found in either collection');
       return res.status(404).json({
         success: false,
         message: 'Manager not found'
       });
     }
 
-    // console.log('✅ Manager found:', manager.name, 'Department:', manager.department);
+    console.log('✅ Manager found:', manager.name, 'Department:', manager.department);
 
     // Get all employees assigned to this manager
-    const teamMembers = await Employee.find({ manager: managerId })
+    // First try with ObjectId, then try with custom ID if no results
+    let teamMembers = await Employee.find({ manager: managerId })
       .select('id name email position status profilePicture updatedAt performanceData')
       .lean();
 
-    // console.log(`👥 Found ${teamMembers.length} team members assigned to manager ${managerId}`);
+    console.log(`👥 Found ${teamMembers.length} team members assigned to manager ObjectId ${managerId}`);
     
+    // If no team members found with ObjectId, try alternative approaches
     if (teamMembers.length === 0) {
-      // console.log('⚠️ No employees assigned to this manager');
-      // Also check if employees are assigned by manager's custom ID
-      const alternativeTeamMembers = await Employee.find({ manager: managerCustomId })
+      console.log('⚠️ No employees assigned to manager ObjectId, trying alternative searches...');
+      
+      // Try finding employees where manager field contains the custom ID as string
+      // This handles cases where manager field might have been stored as string
+      try {
+        const alternativeTeamMembers = await Employee.find({ 
+          $or: [
+            { 'manager': managerCustomId }, // In case manager field contains string
+            { 'manager': manager._id } // Try with manager's ObjectId again
+          ]
+        })
         .select('id name email position status profilePicture updatedAt performanceData')
         .lean();
-      
-      // console.log(`🔄 Alternative search by custom ID found ${alternativeTeamMembers.length} team members`);
-      
-      if (alternativeTeamMembers.length > 0) {
-        teamMembers.push(...alternativeTeamMembers);
+        
+        console.log(`🔄 Alternative search found ${alternativeTeamMembers.length} team members`);
+        
+        if (alternativeTeamMembers.length > 0) {
+          teamMembers = alternativeTeamMembers;
+        }
+      } catch (alternativeError) {
+        console.log('Alternative search failed:', alternativeError.message);
+        
+        // Final fallback: search for employees with no manager field restrictions
+        // and filter by department if possible
+        try {
+          const departmentTeamMembers = await Employee.find({ 
+            department: manager.department,
+            role: { $ne: 'manager' } // Exclude other managers
+          })
+          .select('id name email position status profilePicture updatedAt performanceData')
+          .lean();
+          
+          console.log(`🏢 Department-based search found ${departmentTeamMembers.length} potential team members`);
+          
+          // For now, we'll use these as fallback team members
+          teamMembers = departmentTeamMembers;
+        } catch (deptError) {
+          console.log('Department-based search failed:', deptError.message);
+          // Continue with empty team members array
+        }
       }
     }
 
     // Calculate metrics
     const metrics = await calculateDashboardMetrics(managerId, teamMembers);
-    // console.log('📊 Calculated metrics:', metrics);
+    console.log('📊 Calculated metrics:', metrics);
 
     // Get chart data
     const chartData = await getChartData(managerId, teamMembers);
@@ -77,7 +109,7 @@ exports.getManagerDashboardData = async (req, res) => {
     .limit(10)
     .lean();
 
-    // console.log(`📝 Found ${recentTasks.length} recent tasks`);
+    console.log(`📝 Found ${recentTasks.length} recent tasks`);
 
     // Get pending requests (leave and reimbursement)
     const pendingLeaves = await Leave.find({
@@ -90,11 +122,11 @@ exports.getManagerDashboardData = async (req, res) => {
       status: 'pending'
     }).countDocuments();
 
-    // console.log(`📋 Pending requests - Leaves: ${pendingLeaves}, Reimbursements: ${pendingReimbursements}`);
+    console.log(`📋 Pending requests - Leaves: ${pendingLeaves}, Reimbursements: ${pendingReimbursements}`);
 
     // Format team members data
     const formattedTeamMembers = await formatTeamMembers(teamMembers);
-    // console.log(`👥 Formatted ${formattedTeamMembers.length} team members`);
+    console.log(`👥 Formatted ${formattedTeamMembers.length} team members`);
 
     const responseData = {
       manager: {
@@ -111,7 +143,7 @@ exports.getManagerDashboardData = async (req, res) => {
       recentTasks
     };
 
-    // console.log('✅ Sending dashboard response with team members count:', responseData.teamMembers.length);
+    console.log('✅ Sending dashboard response with team members count:', responseData.teamMembers.length);
 
     return res.status(200).json({
       success: true,
@@ -133,10 +165,57 @@ exports.getManagerDashboardData = async (req, res) => {
 exports.getTeamMembers = async (req, res) => {
   try {
     const managerId = req.user._id;
+    const managerCustomId = req.user.id;
 
-    const teamMembers = await Employee.find({ manager: managerId })
+    // First try with ObjectId
+    let teamMembers = await Employee.find({ manager: managerId })
       .select('id name email position status profilePicture phone location updatedAt performanceData')
       .lean();
+
+    // If no team members found with ObjectId, try alternative approaches
+    if (teamMembers.length === 0) {
+      console.log('⚠️ No employees assigned to manager ObjectId, trying alternative searches...');
+      
+      // Try finding employees where manager field contains the custom ID as string
+      try {
+        const alternativeTeamMembers = await Employee.find({ 
+          $or: [
+            { 'manager': managerCustomId }, // In case manager field contains string
+            { 'manager': managerId } // Try with manager's ObjectId again
+          ]
+        })
+        .select('id name email position status profilePicture phone location updatedAt performanceData')
+        .lean();
+        
+        console.log(`🔄 Alternative search found ${alternativeTeamMembers.length} team members`);
+        
+        if (alternativeTeamMembers.length > 0) {
+          teamMembers = alternativeTeamMembers;
+        }
+      } catch (alternativeError) {
+        console.log('Alternative search failed:', alternativeError.message);
+        
+        // Final fallback: Get manager details and search by department
+        try {
+          const Manager = require('../models/managerModel');
+          const manager = await Manager.findById(managerId);
+          
+          if (manager) {
+            const departmentTeamMembers = await Employee.find({ 
+              department: manager.department,
+              role: { $ne: 'manager' } // Exclude other managers
+            })
+            .select('id name email position status profilePicture phone location updatedAt performanceData')
+            .lean();
+            
+            console.log(`🏢 Department-based search found ${departmentTeamMembers.length} potential team members`);
+            teamMembers = departmentTeamMembers;
+          }
+        } catch (deptError) {
+          console.log('Department-based search failed:', deptError.message);
+        }
+      }
+    }
 
     const formattedMembers = await formatTeamMembers(teamMembers);
 
@@ -160,7 +239,47 @@ exports.getTeamMembers = async (req, res) => {
 exports.getChartData = async (req, res) => {
   try {
     const managerId = req.user._id;
-    const teamMembers = await Employee.find({ manager: managerId }).lean();
+    const managerCustomId = req.user.id;
+    
+    // First try with ObjectId
+    let teamMembers = await Employee.find({ manager: managerId }).lean();
+    
+    // If no team members found with ObjectId, try alternative approaches
+    if (teamMembers.length === 0) {
+      console.log('⚠️ No employees assigned to manager ObjectId for chart data, trying alternative searches...');
+      
+      try {
+        const alternativeTeamMembers = await Employee.find({ 
+          $or: [
+            { 'manager': managerCustomId },
+            { 'manager': managerId }
+          ]
+        }).lean();
+        
+        if (alternativeTeamMembers.length > 0) {
+          teamMembers = alternativeTeamMembers;
+        }
+      } catch (alternativeError) {
+        console.log('Alternative search failed for chart data:', alternativeError.message);
+        
+        // Final fallback: search by department
+        try {
+          const Manager = require('../models/managerModel');
+          const manager = await Manager.findById(managerId);
+          
+          if (manager) {
+            const departmentTeamMembers = await Employee.find({ 
+              department: manager.department,
+              role: { $ne: 'manager' }
+            }).lean();
+            
+            teamMembers = departmentTeamMembers;
+          }
+        } catch (deptError) {
+          console.log('Department-based search failed for chart data:', deptError.message);
+        }
+      }
+    }
     
     const chartData = await getChartData(managerId, teamMembers);
 

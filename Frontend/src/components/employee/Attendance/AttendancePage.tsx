@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { Helmet } from 'react-helmet';
 import Sidebar from '../Sidebar';
 import AttendanceHeader from './AttendanceHeader';
 import CheckInOutControls from './CheckInOutControls';
@@ -13,6 +14,7 @@ import 'bootstrap-icons/font/bootstrap-icons.css';
 import '../../../styles/employee/attendance.css';
 import attendanceService from '../../../services/attendanceService';
 import leaveService from '../../../services/leaveService';
+import { getEmployeeById } from '../../../services/employeeService';
 import { login } from '../../../services/authService';
 
 const AttendancePage: React.FC = () => {
@@ -38,43 +40,136 @@ const AttendancePage: React.FC = () => {
   const [isCheckingIn, setIsCheckingIn] = useState<boolean>(false);
   const [isCheckingOut, setIsCheckingOut] = useState<boolean>(false);
 
+  // Circuit breaker for API calls
+  const circuitBreaker = useRef({
+    isOpen: false,
+    failureCount: 0,
+    lastFailureTime: 0,
+    threshold: 3, // Open circuit after 3 failures
+    timeout: 30000 // Keep circuit breaker open for 30 seconds
+  });
+
   // Use ref to store timer functions to avoid dependency issues
   const timerRef = useRef<{
     startWorkTimer: (startTime: Date) => void;
     stopWorkTimer: () => void;
   }>();
 
-  // Load the current employee
+  // Load the current employee and their profile
   useEffect(() => {
     const employeeData = localStorage.getItem('employeeUserData');
     if (employeeData) {
-      const parsedUser = JSON.parse(employeeData);
-      setEmployee({
-        id: parsedUser.id,
-        name: parsedUser.name,
-        email: parsedUser.email
-      });
-      setIsLoggedIn(true);
+      try {
+        const parsedUser = JSON.parse(employeeData);
+        setEmployee({
+          id: parsedUser.id,
+          name: parsedUser.name,
+          email: parsedUser.email
+        });
+        setIsLoggedIn(true);
+        
+        // Load full employee profile with shift time and office location
+        loadEmployeeProfile(parsedUser.id);
+      } catch (error) {
+        console.error('Error parsing employee data:', error);
+        setError('Invalid session data. Please log in again.');
+      }
     }
   }, []);
 
-  // Get current status based on check-in/out times and leave dates
-  const getCurrentStatus = useCallback((): AttendanceStatus => {
-    const today = new Date().toISOString().split('T')[0];
-    if (approvedLeaveDates.has(today)) return 'leave';
-    if (!checkInTime) return 'absent';
-    if (checkOutTime) return 'present';
-    return 'present';
-  }, [checkInTime, checkOutTime, approvedLeaveDates]);
+  // Function to load employee profile data
+  const loadEmployeeProfile = async (employeeId: string) => {
+    try {
+      // Use the proper employee service to get complete employee data
+      const profile = await getEmployeeById(employeeId);
+      
+      // Convert the employee data to the format expected by attendance system
+      setEmployeeProfile({
+        id: profile.id,
+        name: profile.name,
+        email: profile.email,
+        department: profile.department,
+        position: profile.position,
+        shiftTime: profile.shiftTime || { start: '09:00', end: '17:00' },
+        officeLocation: profile.officeLocation || { lat: 0, lng: 0, address: { city: '', state: '', country: '' } }
+      });
+    } catch (error) {
+      console.error('Error loading employee profile:', error);
+      // Set a default profile to prevent errors
+      setEmployeeProfile({
+        id: employeeId,
+        name: employee?.name || '',
+        email: employee?.email || '',
+        shiftTime: { start: '09:00', end: '17:00' },
+        officeLocation: { lat: 0, lng: 0, address: { city: '', state: '', country: '' } }
+      });
+    }
+  };
 
-  // Memoize location update function
-  const updateLocationStatus = useCallback((location: LocationData) => {
-    const officeLocation = { lat: 0, lng: 0 }; // Replace with actual office coordinates
-    const distance = calculateDistance(location, officeLocation);
-    const isInOffice = distance <= 0.1; // Within 100 meters of office
+  // Function to validate if check-in time is within shift hours
+  const isWithinShiftHours = (currentTime: Date, shiftTime?: { start: string; end: string }): { isValid: boolean; message?: string } => {
+    if (!shiftTime) {
+      return { isValid: true }; // If no shift time defined, allow any time
+    }
 
-    setLocationStatus(isInOffice ? 'At Office' : 'Remote');
-  }, []);
+    const currentHour = currentTime.getHours();
+    const currentMinute = currentTime.getMinutes();
+    const currentTimeInMinutes = currentHour * 60 + currentMinute;
+
+    // Parse shift start time
+    const [startHour, startMinute] = shiftTime.start.split(':').map(Number);
+    const shiftStartInMinutes = startHour * 60 + startMinute;
+
+    // Parse shift end time
+    const [endHour, endMinute] = shiftTime.end.split(':').map(Number);
+    const shiftEndInMinutes = endHour * 60 + endMinute;
+
+    // Allow check-in 30 minutes before shift start and 2 hours after shift start
+    const earlyCheckInBuffer = 30; // minutes
+    const lateCheckInBuffer = 120; // minutes (2 hours)
+
+    const earliestCheckIn = shiftStartInMinutes - earlyCheckInBuffer;
+    const latestCheckIn = shiftStartInMinutes + lateCheckInBuffer;
+
+    if (currentTimeInMinutes < earliestCheckIn) {
+      const earliestTime = `${Math.floor(earliestCheckIn / 60).toString().padStart(2, '0')}:${(earliestCheckIn % 60).toString().padStart(2, '0')}`;
+      return { 
+        isValid: false, 
+        message: `Check-in too early. You can check in from ${earliestTime} onwards (30 minutes before your shift).` 
+      };
+    }
+
+    if (currentTimeInMinutes > latestCheckIn) {
+      const latestTime = `${Math.floor(latestCheckIn / 60).toString().padStart(2, '0')}:${(latestCheckIn % 60).toString().padStart(2, '0')}`;
+      return { 
+        isValid: false, 
+        message: `Check-in too late. Latest check-in time is ${latestTime} (2 hours after shift start).` 
+      };
+    }
+
+    return { isValid: true };
+  };
+
+  // Update location status with proper office location
+  const updateLocationStatus = (location: LocationData) => {
+    // Check if there's meaningful office location data (address OR coordinates)
+    const hasAddress = employeeProfile?.officeLocation?.address && (
+      employeeProfile.officeLocation.address.city || 
+      employeeProfile.officeLocation.address.state || 
+      employeeProfile.officeLocation.address.country
+    );
+    const hasCoordinates = employeeProfile?.officeLocation && (
+      employeeProfile.officeLocation.lat !== 0 || employeeProfile.officeLocation.lng !== 0
+    );
+
+    if (!hasAddress && !hasCoordinates) {
+      setLocationStatus('Remote');
+      return;
+    }
+
+    // If employee has office location configured, show as "At Office"
+    setLocationStatus('At Office');
+  };
 
   // Memoize location fetching
   const getLocation = useCallback(() => {
@@ -109,7 +204,7 @@ const AttendancePage: React.FC = () => {
     } else {
       setError('Geolocation is not supported by this browser');
     }
-  }, [updateLocationStatus, employeeProfile]);
+  }, [employeeProfile]);
 
   // Initialize timer functions in ref to avoid dependency issues
   useEffect(() => {
@@ -120,9 +215,10 @@ const AttendancePage: React.FC = () => {
       
       const timer = setInterval(() => {
         const now = new Date();
-        const hoursWorked = (now.getTime() - startTime.getTime()) / (1000 * 60 * 60);
-        setHoursWorked(hoursWorked.toFixed(2));
-      }, 1000);
+        const timeDiff = now.getTime() - startTime.getTime();
+        const hours = timeDiff / (1000 * 60 * 60);
+        setHoursWorked(hours.toFixed(2));
+      }, 60000); // Update every minute
       
       setWorkTimer(timer);
     };
@@ -135,17 +231,15 @@ const AttendancePage: React.FC = () => {
     };
 
     timerRef.current = { startWorkTimer, stopWorkTimer };
+
+    return () => {
+      if (workTimer) {
+        clearInterval(workTimer);
+      }
+    };
   }, [workTimer]);
 
-  // Circuit breaker for API calls
-  const circuitBreaker = useRef({
-    isOpen: false,
-    failureCount: 0,
-    lastFailureTime: 0,
-    threshold: 3, // Open circuit after 3 failures
-    timeout: 30000 // Keep circuit open for 30 seconds
-  });
-
+  // Circuit breaker functions
   const checkCircuitBreaker = useCallback(() => {
     const breaker = circuitBreaker.current;
     
@@ -330,9 +424,9 @@ const AttendancePage: React.FC = () => {
     } finally {
       setIsLoadingAttendance(false);
     }
-  }, [isLoggedIn, employee, isLoadingAttendance, checkCircuitBreaker, recordSuccess, recordFailure, showNotification]);
+  }, [isLoggedIn, employee, isLoadingAttendance]);
 
-  // Memoize check-in handler with loading state
+  // Memoize check-in handler with shift time and location validation
   const handleCheckIn = useCallback(async () => {
     if (isCheckingIn) return; // Prevent multiple simultaneous check-ins
     
@@ -346,9 +440,33 @@ const AttendancePage: React.FC = () => {
       return;
     }
 
-    if (employeeProfile?.officeLocation && !isLocationWithinWorkArea) {
-      setError('You are not at your designated work location');
+    if (!employeeProfile) {
+      setError('Employee profile not loaded. Please refresh the page.');
       return;
+    }
+
+    // Validate shift time
+    const now = new Date();
+    const shiftValidation = isWithinShiftHours(now, employeeProfile.shiftTime);
+    if (!shiftValidation.isValid) {
+      setError(shiftValidation.message || 'Check-in time is outside your shift hours');
+      return;
+    }
+
+    // Validate location (only if office location is set)
+    if (employeeProfile.officeLocation && employeeProfile.officeLocation.lat !== 0 && employeeProfile.officeLocation.lng !== 0) {
+      // Check if employee has office location configured
+      const hasAddress = employeeProfile.officeLocation.address && (
+        employeeProfile.officeLocation.address.city || 
+        employeeProfile.officeLocation.address.state || 
+        employeeProfile.officeLocation.address.country
+      );
+      const hasCoordinates = employeeProfile.officeLocation.lat !== 0 || employeeProfile.officeLocation.lng !== 0;
+
+      if (!hasAddress && !hasCoordinates) {
+        setError('No office location configured. Please set your office location first.');
+        return;
+      }
     }
     
     try {
@@ -358,17 +476,21 @@ const AttendancePage: React.FC = () => {
       setIsCheckingIn(true);
       setError(null); // Clear any previous errors
       
-      // Call check-in API
+      // Call check-in API with basic location data (enhanced validation done above)
       await attendanceService.checkIn(currentLocation);
       
-      const now = new Date();
       setCheckInTime(now);
       
       // Start work timer
       timerRef.current?.startWorkTimer(now);
       
       recordSuccess(); // Record successful API call
-      showNotification('Checked in successfully', 'success');
+      
+      // Show success message with shift info
+      const shiftInfo = employeeProfile.shiftTime 
+        ? ` (Shift: ${employeeProfile.shiftTime.start} - ${employeeProfile.shiftTime.end})` 
+        : '';
+      showNotification(`Checked in successfully${shiftInfo}`, 'success');
     } catch (err: any) {
       recordFailure();
       
@@ -389,9 +511,18 @@ const AttendancePage: React.FC = () => {
     } finally {
       setIsCheckingIn(false);
     }
-  }, [currentLocation, isLoggedIn, employeeProfile, isLocationWithinWorkArea, isCheckingIn, checkCircuitBreaker, recordSuccess, recordFailure, showNotification]);
+  }, [currentLocation, isLoggedIn, employeeProfile, isCheckingIn]);
 
-  // Memoize check-out handler with loading state
+  // Get current status based on check-in/out times and leave dates
+  const getCurrentStatus = useCallback((): AttendanceStatus => {
+    const today = new Date().toISOString().split('T')[0];
+    if (approvedLeaveDates.has(today)) return 'leave';
+    if (!checkInTime) return 'absent';
+    if (checkOutTime) return 'present';
+    return 'present';
+  }, [checkInTime, checkOutTime, approvedLeaveDates]);
+
+  // Memoize check-out handler with enhanced validation
   const handleCheckOut = useCallback(async () => {
     if (isCheckingOut) return; // Prevent multiple simultaneous check-outs
     
@@ -410,6 +541,11 @@ const AttendancePage: React.FC = () => {
       return;
     }
 
+    if (!employeeProfile) {
+      setError('Employee profile not loaded. Please refresh the page.');
+      return;
+    }
+
     try {
       // Check circuit breaker before making requests
       checkCircuitBreaker();
@@ -417,13 +553,17 @@ const AttendancePage: React.FC = () => {
       setIsCheckingOut(true);
       setError(null); // Clear any previous errors
       
-      // Call check-out API
+      // Call check-out API with basic location data (enhanced validation done above)
       const attendanceData = await attendanceService.checkOut(currentLocation);
       
       const now = new Date();
       setCheckOutTime(now);
       
-      // Update work hours
+      // Calculate actual work hours
+      const workHours = (now.getTime() - checkInTime.getTime()) / (1000 * 60 * 60);
+      setHoursWorked(workHours.toFixed(2));
+      
+      // Update from API response if available
       if (attendanceData.workHours) {
         setHoursWorked(attendanceData.workHours.toFixed(2));
       }
@@ -432,7 +572,9 @@ const AttendancePage: React.FC = () => {
       timerRef.current?.stopWorkTimer();
       
       recordSuccess(); // Record successful API call
-      showNotification('Checked out successfully', 'success');
+      
+      // Show success message with work hours
+      showNotification(`Checked out successfully (${workHours.toFixed(2)} hours worked)`, 'success');
       
       // Refresh stats after a brief delay to avoid overwhelming the server
       setTimeout(async () => {
@@ -467,7 +609,7 @@ const AttendancePage: React.FC = () => {
     } finally {
       setIsCheckingOut(false);
     }
-  }, [checkInTime, currentLocation, isLoggedIn, isCheckingOut, checkCircuitBreaker, recordSuccess, recordFailure, showNotification]);
+  }, [checkInTime, currentLocation, isLoggedIn, employeeProfile, isCheckingOut]);
 
   // Handle leave dates change
   const handleLeaveDatesChange = useCallback(async (dates: Set<string>) => {
@@ -475,6 +617,11 @@ const AttendancePage: React.FC = () => {
     // Note: This is a UI-only feature for now 
     // In a full implementation, this would call an API to request leave
   }, []);
+
+  // Initialize location
+  useEffect(() => {
+    getLocation();
+  }, [getLocation]);
 
   // Initialize
   useEffect(() => {
@@ -502,6 +649,13 @@ const AttendancePage: React.FC = () => {
     };
   }, [isLoggedIn, employee]); // Remove loadAttendanceData from dependencies to prevent infinite loop
 
+  // Update location status when employee profile or current location changes
+  useEffect(() => {
+    if (employeeProfile && currentLocation) {
+      updateLocationStatus(currentLocation);
+    }
+  }, [employeeProfile, currentLocation]);
+
   // Update location check when location or profile changes
   useEffect(() => {
     if (currentLocation && employeeProfile?.officeLocation) {
@@ -511,160 +665,167 @@ const AttendancePage: React.FC = () => {
   }, [currentLocation, employeeProfile]);
 
   return (
-    <div className="min-h-screen bg-[#e0e5ec]">
-      <Sidebar />
-      <div className="main-content p-6">
-        <div className="max-w-7xl mx-auto">
-          <AttendanceHeader />
-          
-          {error && (
-            <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <h4 className="font-semibold mb-2 flex items-center gap-2">
-                    <i className="bi bi-exclamation-triangle"></i>
-                    {circuitBreaker.current.isOpen ? 'Service Temporarily Unavailable' : 'Attendance Data Error'}
-                  </h4>
-                  <p className="mb-3">{error}</p>
-                  
-                  {circuitBreaker.current.isOpen && (
-                    <div className="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded">
-                      <p className="text-yellow-800 text-sm">
-                        <i className="bi bi-shield-exclamation mr-2"></i>
-                        The system is temporarily limiting requests to protect the server. 
-                        Please wait a moment before trying again.
-                      </p>
-                      <div className="mt-2 text-xs text-yellow-600">
-                        Circuit breaker will reset automatically in a few moments.
-                      </div>
-                    </div>
-                  )}
-                  
-                  <div className="flex gap-2 flex-wrap">
-                    <button
-                      onClick={() => {
-                        setError(null);
-                        if (isLoggedIn && employee && !circuitBreaker.current.isOpen) {
-                          loadAttendanceData();
-                        }
-                      }}
-                      disabled={circuitBreaker.current.isOpen || isLoadingAttendance}
-                      className={`px-3 py-1 rounded text-sm transition-colors ${
-                        circuitBreaker.current.isOpen || isLoadingAttendance
-                          ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                          : 'bg-red-600 text-white hover:bg-red-700'
-                      }`}
-                    >
-                      <i className={`bi bi-${isLoadingAttendance ? 'arrow-repeat animate-spin' : 'arrow-clockwise'} mr-1`}></i>
-                      {isLoadingAttendance ? 'Loading...' : 'Retry'}
-                    </button>
-                    
-                    <button
-                      onClick={() => {
-                        setError(null);
-                        // Force re-fetch employee data
-                        const employeeData = localStorage.getItem('employeeUserData');
-                        if (employeeData) {
-                          const parsedUser = JSON.parse(employeeData);
-                          setEmployee({
-                            id: parsedUser.id,
-                            name: parsedUser.name,
-                            email: parsedUser.email
-                          });
-                          setIsLoggedIn(true);
-                        }
-                      }}
-                      className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors"
-                    >
-                      <i className="bi bi-person-refresh mr-1"></i>
-                      Refresh Session
-                    </button>
+    <>
+      <Helmet>
+        <title>WorkSmart AI - Employee Attendance</title>
+      </Helmet>
+      <div className="min-h-screen bg-[#e0e5ec]">
+        <Sidebar />
+        <div className="main-content p-6">
+          <div className="max-w-7xl mx-auto">
+            <AttendanceHeader />
+            
+            {error && (
+              <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <h4 className="font-semibold mb-2 flex items-center gap-2">
+                      <i className="bi bi-exclamation-triangle"></i>
+                      {circuitBreaker.current.isOpen ? 'Service Temporarily Unavailable' : 'Attendance Data Error'}
+                    </h4>
+                    <p className="mb-3">{error}</p>
                     
                     {circuitBreaker.current.isOpen && (
+                      <div className="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded">
+                        <p className="text-yellow-800 text-sm">
+                          <i className="bi bi-shield-exclamation mr-2"></i>
+                          The system is temporarily limiting requests to protect the server. 
+                          Please wait a moment before trying again.
+                        </p>
+                        <div className="mt-2 text-xs text-yellow-600">
+                          Circuit breaker will reset automatically in a few moments.
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div className="flex gap-2 flex-wrap">
                       <button
                         onClick={() => {
-                          // Reset circuit breaker manually
-                          circuitBreaker.current.isOpen = false;
-                          circuitBreaker.current.failureCount = 0;
                           setError(null);
-                          showNotification('Circuit breaker reset. You can try again now.', 'info');
+                          if (isLoggedIn && employee && !circuitBreaker.current.isOpen) {
+                            loadAttendanceData();
+                          }
                         }}
-                        className="px-3 py-1 bg-orange-600 text-white rounded text-sm hover:bg-orange-700 transition-colors"
+                        disabled={circuitBreaker.current.isOpen || isLoadingAttendance}
+                        className={`px-3 py-1 rounded text-sm transition-colors ${
+                          circuitBreaker.current.isOpen || isLoadingAttendance
+                            ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                            : 'bg-red-600 text-white hover:bg-red-700'
+                        }`}
                       >
-                        <i className="bi bi-bootstrap-reboot mr-1"></i>
-                        Force Reset
+                        <i className={`bi bi-${isLoadingAttendance ? 'arrow-repeat animate-spin' : 'arrow-clockwise'} mr-1`}></i>
+                        {isLoadingAttendance ? 'Loading...' : 'Retry'}
                       </button>
-                    )}
+                      
+                      <button
+                        onClick={() => {
+                          setError(null);
+                          // Force re-fetch employee data
+                          const employeeData = localStorage.getItem('employeeUserData');
+                          if (employeeData) {
+                            const parsedUser = JSON.parse(employeeData);
+                            setEmployee({
+                              id: parsedUser.id,
+                              name: parsedUser.name,
+                              email: parsedUser.email
+                            });
+                            setIsLoggedIn(true);
+                          }
+                        }}
+                        className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors"
+                      >
+                        <i className="bi bi-person-refresh mr-1"></i>
+                        Refresh Session
+                      </button>
+                      
+                      {circuitBreaker.current.isOpen && (
+                        <button
+                          onClick={() => {
+                            // Reset circuit breaker manually
+                            circuitBreaker.current.isOpen = false;
+                            circuitBreaker.current.failureCount = 0;
+                            setError(null);
+                            showNotification('Circuit breaker reset. You can try again now.', 'info');
+                          }}
+                          className="px-3 py-1 bg-orange-600 text-white rounded text-sm hover:bg-orange-700 transition-colors"
+                        >
+                          <i className="bi bi-bootstrap-reboot mr-1"></i>
+                          Force Reset
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <button
+                    onClick={() => setError(null)}
+                    className="ml-2 text-red-500 hover:text-red-700"
+                  >
+                    <i className="bi bi-x-lg"></i>
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            {isLoadingAttendance && !error && (
+              <div className="mb-4 p-4 bg-blue-50 text-blue-700 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="animate-spin">
+                    <i className="bi bi-arrow-repeat"></i>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold">Loading Attendance Data</h4>
+                    <p className="text-sm">Please wait while we fetch your attendance information...</p>
                   </div>
                 </div>
-                
-                <button
-                  onClick={() => setError(null)}
-                  className="ml-2 text-red-500 hover:text-red-700"
-                >
-                  <i className="bi bi-x-lg"></i>
-                </button>
               </div>
-            </div>
-          )}
-          
-          {isLoadingAttendance && !error && (
-            <div className="mb-4 p-4 bg-blue-50 text-blue-700 rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="animate-spin">
-                  <i className="bi bi-arrow-repeat"></i>
-                </div>
-                <div>
-                  <h4 className="font-semibold">Loading Attendance Data</h4>
-                  <p className="text-sm">Please wait while we fetch your attendance information...</p>
-                </div>
+            )}
+            
+            {!isLoggedIn && (
+              <div className="mb-6 p-6 bg-white rounded-lg shadow-md">
+                <h3 className="text-lg font-semibold mb-4">Authentication Required</h3>
+                <p className="mb-4">You need to be logged in to use the attendance system</p>
               </div>
+            )}
+            
+            {isLoggedIn && (
+              <>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              <CurrentStatus 
+                hoursWorked={hoursWorked} 
+                status={getCurrentStatus()}
+                locationStatus={locationStatus}
+                checkInTime={checkInTime?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                shiftTime={employeeProfile?.shiftTime}
+                officeLocation={employeeProfile?.officeLocation}
+              />
+              <CheckInOutControls 
+                onCheckIn={handleCheckIn} 
+                onCheckOut={handleCheckOut} 
+                isCheckedIn={!!checkInTime && !checkOutTime}
+                isCheckedOut={!!checkOutTime}
+              />
             </div>
-          )}
-          
-          {!isLoggedIn && (
-            <div className="mb-6 p-6 bg-white rounded-lg shadow-md">
-              <h3 className="text-lg font-semibold mb-4">Authentication Required</h3>
-              <p className="mb-4">You need to be logged in to use the attendance system</p>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <LeaveCalendar 
+                leaveDates={leaveDates}
+                approvedLeaveDates={approvedLeaveDates}
+                onLeaveDatesChange={handleLeaveDatesChange}
+              />
+              <AttendanceReports
+                weeklyHours={weeklyHours}
+                attendanceStats={attendanceStats}
+              />
             </div>
-          )}
-          
-          {isLoggedIn && (
-            <>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <CurrentStatus 
-              hoursWorked={hoursWorked} 
-              status={getCurrentStatus()}
-              locationStatus={locationStatus}
-              checkInTime={checkInTime?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-            />
-            <CheckInOutControls 
-              onCheckIn={handleCheckIn} 
-              onCheckOut={handleCheckOut} 
-              isCheckedIn={!!checkInTime && !checkOutTime}
-              isCheckedOut={!!checkOutTime}
-            />
+              </>
+            )}
+            
+            {/* Debug Tool - Remove in production */}
+            <AttendanceDebugTool />
           </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <LeaveCalendar 
-              leaveDates={leaveDates}
-              approvedLeaveDates={approvedLeaveDates}
-              onLeaveDatesChange={handleLeaveDatesChange}
-            />
-            <AttendanceReports
-              weeklyHours={weeklyHours}
-              attendanceStats={attendanceStats}
-            />
-          </div>
-            </>
-          )}
-          
-          {/* Debug Tool - Remove in production */}
-          <AttendanceDebugTool />
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

@@ -432,6 +432,9 @@ export interface AdminAttendanceResponse {
 // Get all users' attendance records (Admin)
 export const getAllAttendanceRecords = async (filters: {
   date?: string;
+  startDate?: string;
+  endDate?: string;
+  dateRange?: { startDate: string; endDate: string };
   department?: string;
   status?: string;
   search?: string;
@@ -441,15 +444,51 @@ export const getAllAttendanceRecords = async (filters: {
 } = {}): Promise<AdminAttendanceResponse> => {
   try {
     const params = new URLSearchParams();
+    
+    // Handle dateRange object by extracting startDate and endDate
+    if (filters.dateRange) {
+      if (filters.dateRange.startDate) {
+        params.append('startDate', filters.dateRange.startDate);
+      }
+      if (filters.dateRange.endDate) {
+        params.append('endDate', filters.dateRange.endDate);
+      }
+    }
+    
+    // Process other filters
     Object.entries(filters).forEach(([key, value]) => {
+      // Skip dateRange as it's handled above
+      if (key === 'dateRange') return;
+      
       if (value !== undefined && value !== null && value !== '') {
         params.append(key, value.toString());
       }
     });
+    
     const response = await api.get<ApiResponse<AdminAttendanceResponse>>(`${BASE_URL}/all?${params.toString()}`);
     return response.data as unknown as AdminAttendanceResponse;
   } catch (error) {
     console.error('Error fetching all attendance records:', error);
+    throw error;
+  }
+};
+
+// End day - process all attendance and mark absent/leave users
+export const endDay = async (): Promise<{
+  success: boolean;
+  message: string;
+  data: {
+    processed: number;
+    marked_absent: number;
+    marked_leave: number;
+    already_present: number;
+  };
+}> => {
+  try {
+    const response = await api.post(`${BASE_URL}/end-day`);
+    return response.data;
+  } catch (error: any) {
+    console.error('Error ending day:', error);
     throw error;
   }
 };
@@ -756,7 +795,8 @@ const attendanceService = {
   getDepartmentAttendanceStats,
   getAttendanceTrends,
   getMonthlyAttendanceStats,
-  getAttendanceDistribution
+  getAttendanceDistribution,
+  endDay
 };
 
 export default attendanceService; 
