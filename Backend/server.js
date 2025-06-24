@@ -20,8 +20,13 @@ const dashboardRoutes = require("./routes/dashboardRoutes");
 const managerDashboardRoutes = require("./routes/managerDashboardRoutes");
 const adminDashboardRoutes = require("./routes/adminDashboardRoutes");
 const managerEmployeeDataRoutes = require("./routes/managerEmployeeDataRoutes");
+const aiRoutes = require("./routes/aiRoutes");
 const errorHandler = require("./middlewares/errorHandler");
 const path = require("path");
+
+// AI Services
+const aiScheduler = require("./services/aiScheduler");
+const mlPredictor = require("./services/mlPredictor");
 
 dotenv.config();
 const app = express();
@@ -126,7 +131,7 @@ if (!fs.existsSync(uploadsDir)) {
 
 // Routes
 app.get("/", (req, resp) => {
-  resp.send("Employee Management API is running");
+  resp.send("Employee Management API with AI-Powered Task Scheduling is running");
 });
 
 // Mount API routes
@@ -148,9 +153,28 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/manager/dashboard", managerDashboardRoutes);
 app.use("/api/admin/dashboard", adminDashboardRoutes);
 app.use("/api/manager/employee-data", managerEmployeeDataRoutes);
+app.use("/api/ai", aiRoutes);
 
 // Error handler middleware
 app.use(errorHandler);
+
+// Initialize AI Services
+const initializeAI = async () => {
+  try {
+    console.log('🤖 Initializing AI Services...');
+    
+    // Initialize AI Scheduler
+    await aiScheduler.initialize();
+    
+    // Initialize ML Predictor
+    await mlPredictor.initialize();
+    
+    console.log('✅ AI Services initialized successfully');
+  } catch (error) {
+    console.error('❌ Failed to initialize AI Services:', error.message);
+    console.log('⚠️  AI features will use fallback methods');
+  }
+};
 
 // Start server
 const startServer = async () => {
@@ -164,10 +188,19 @@ const startServer = async () => {
       process.exit(1);
     }
     
+    // Initialize AI services after database connection
+    await initializeAI();
+    
     app.listen(PORT, () => {
-      console.log(`Server is running at port: ${PORT}`);
-      console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-      // console.log("✅ All backend endpoints are now properly implemented!");
+      console.log(`🚀 Server is running at port: ${PORT}`);
+      console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log("✅ Backend with AI-Powered Task Scheduling is ready!");
+      console.log("\n🤖 AI Features Available:");
+      console.log("   • Intelligent Task Prioritization");
+      console.log("   • Smart Workload Analysis");
+      console.log("   • ML-Based Duration Prediction");
+      console.log("   • Automated Task Sequencing");
+      console.log("   • Real-time Recommendations");
     });
   } catch (error) {
     console.error("Error starting server:", error.message);
