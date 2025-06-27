@@ -123,11 +123,12 @@ app.use(
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Create uploads directory if it doesn't exist
-const fs = require('fs');
-const uploadsDir = path.join(__dirname, 'uploads/receipts');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
+// NOTE: Disabled for Vercel/serverless deployment (no persistent filesystem)
+// const fs = require('fs');
+// const uploadsDir = path.join(__dirname, 'uploads/receipts');
+// if (!fs.existsSync(uploadsDir)) {
+//   fs.mkdirSync(uploadsDir, { recursive: true });
+// }
 
 // Routes
 app.get("/", (req, resp) => {
