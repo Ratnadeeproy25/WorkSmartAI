@@ -176,36 +176,31 @@ const initializeAI = async () => {
   }
 };
 
-// Start server
-const startServer = async () => {
-  try {
-    const connected = await connectDB();
-    
-    if (!connected) {
-      console.error("Failed to connect to MongoDB. Please check your connection settings.");
-      console.error("Make sure MongoDB is running and the MONGO_URI is correct.");
-      console.error("You can create a .env file with: PORT=5000 and MONGO_URI=mongodb://127.0.0.1:27017/worksmartAI");
-      process.exit(1);
-    }
-    
-    // Initialize AI services after database connection
-    await initializeAI();
-    
-    app.listen(PORT, () => {
-      console.log(`🚀 Server is running at port: ${PORT}`);
-      console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-      console.log("✅ Backend with AI-Powered Task Scheduling is ready!");
-      console.log("\n🤖 AI Features Available:");
-      console.log("   • Intelligent Task Prioritization");
-      console.log("   • Smart Workload Analysis");
-      console.log("   • ML-Based Duration Prediction");
-      console.log("   • Automated Task Sequencing");
-      console.log("   • Real-time Recommendations");
-    });
-  } catch (error) {
-    console.error("Error starting server:", error.message);
-    process.exit(1);
-  }
-};
+// Remove the startServer and app.listen logic for Vercel compatibility
+// Add initialization logic for serverless
+let isInitialized = false;
 
-startServer();
+async function initialize() {
+  if (!isInitialized) {
+    const connected = await connectDB();
+    if (!connected) {
+      throw new Error("Failed to connect to MongoDB.");
+    }
+    await initializeAI();
+    isInitialized = true;
+  }
+}
+
+// Middleware to ensure initialization on first request
+app.use(async (req, res, next) => {
+  try {
+    await initialize();
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Do NOT call app.listen()
+// Instead, export the app for Vercel
+module.exports = app;
