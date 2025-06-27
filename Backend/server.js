@@ -209,4 +209,10 @@ const startServer = async () => {
   }
 };
 
-startServer();
+// Only start the server locally; export app for Vercel/serverless
+if (!process.env.VERCEL && !process.env.NOW_REGION) {
+  startServer();
+} else {
+  // For Vercel/serverless: export the app (Vercel will handle the serverless function)
+  module.exports = app;
+}
