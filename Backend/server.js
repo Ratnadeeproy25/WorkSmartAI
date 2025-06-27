@@ -94,6 +94,7 @@ const allowedOrigins = [
   'http://127.0.0.1:3001',
   'https://worksmart-ai.vercel.app', // Production frontend
   'https://worksmart-h4of4fg4c-ratnadeeps-projects-bf9785a9.vercel.app', // Vercel preview frontend
+  'https://worksmart-634t4mgfz-ratnadeeps-projects-bf9785a9.vercel.app', // New Vercel preview frontend
   process.env.FRONTEND_URL // Any additional frontend URL from env
 ].filter(Boolean);
 
