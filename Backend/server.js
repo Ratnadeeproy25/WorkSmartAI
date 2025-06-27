@@ -85,28 +85,24 @@ app.use('/api', rateLimit(1000, 15 * 60 * 1000)); // 1000 requests per 15 minute
 
 // Middleware
 app.use(express.json({ limit: '2mb' }));  // Reduced payload limit for security
+
+// Improved CORS configuration
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  'http://localhost:3001',
+  'http://127.0.0.1:3001',
+  process.env.FRONTEND_URL // Make sure this is set in Vercel!
+].filter(Boolean);
+
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow requests with no origin (like mobile apps or curl requests)
-      if (!origin) return callback(null, true);
-      
-      // Define allowed origins
-      const allowedOrigins = [
-        'http://localhost:3000',
-        'http://127.0.0.1:3000',
-        'http://localhost:3001',
-        'http://127.0.0.1:3001'
-      ];
-      
-      // In production, use environment variable
-      if (process.env.NODE_ENV === 'production' && process.env.FRONTEND_URL) {
-        allowedOrigins.push(process.env.FRONTEND_URL);
-      }
-      
-      if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
+      console.log('CORS request from origin:', origin);
+      if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
+        console.log('Blocked by CORS:', origin);
         callback(new Error('Not allowed by CORS'));
       }
     },
