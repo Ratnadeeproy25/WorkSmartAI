@@ -92,7 +92,9 @@ const allowedOrigins = [
   'http://127.0.0.1:3000',
   'http://localhost:3001',
   'http://127.0.0.1:3001',
-  process.env.FRONTEND_URL // Make sure this is set in Vercel!
+  'https://worksmart-ai.vercel.app', // Production frontend
+  'https://worksmart-h4of4fg4c-ratnadeeps-projects-bf9785a9.vercel.app', // Vercel preview frontend
+  process.env.FRONTEND_URL // Any additional frontend URL from env
 ].filter(Boolean);
 
 app.use(
