@@ -96,8 +96,7 @@ app.use(
         'http://localhost:3000',
         'http://127.0.0.1:3000',
         'http://localhost:3001',
-        'http://127.0.0.1:3001',
-        'https://worksmart-ai.vercel.app/'
+        'http://127.0.0.1:3001'
       ];
       
       // In production, use environment variable
