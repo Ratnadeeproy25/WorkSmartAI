@@ -62,7 +62,7 @@ export const login = async (email: string, password: string, role: string): Prom
 // QR code based login
 export const loginWithQr = async (email: string, qrOtp: string, role: string): Promise<AuthResponse> => {
   try {
-    const response = await api.post('/api/auth/login-qr', { email, qrOtp, role });
+    const response = await api.post('/auth/login-qr', { email, qrOtp, role });
     return response.data as AuthResponse;
   } catch (error: any) {
     if (error.response) {
@@ -78,7 +78,7 @@ export const loginWithQr = async (email: string, qrOtp: string, role: string): P
 // Verify if email exists before proceeding to login
 export const verifyEmail = async (email: string, role: string): Promise<EmailVerifyResponse> => {
   try {
-    const response = await api.post('/api/auth/verify-email', { email, role });
+    const response = await api.post('/auth/verify-email', { email, role });
     return response.data as EmailVerifyResponse;
   } catch (error: any) {
     if (error.response) {

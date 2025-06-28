@@ -3,7 +3,7 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 // Default to worksmartAI database if MONGO_URI is not set
-const URI = process.env.MONGO_URI || "mongodb+srv://mrroy251998:Password@cluster0.szumu18.mongodb.net/WorkSmartAi";
+const URI = process.env.MONGO_URI || "mongodb+srv://mrroy251998:Password@cluster0.szumu18.mongodb.net/";
 
 exports.connectDB = async () => {
   try {

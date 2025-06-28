@@ -542,7 +542,6 @@ const getReimbursementHistory = asyncHandler(async (req, res) => {
 // @desc    Upload a receipt
 // @route   POST /api/reimbursement/upload
 // @access  Private (Employee)
-/*
 const uploadReceipt = asyncHandler(async (req, res) => {
   if (!req.file) {
     return res.status(400).json({
@@ -561,7 +560,6 @@ const uploadReceipt = asyncHandler(async (req, res) => {
     },
   });
 });
-*/
 
 // Export all functions
 module.exports = {
@@ -575,5 +573,5 @@ module.exports = {
   cancelReimbursement,
   getReimbursementSummary,
   getReimbursementHistory,
-  // uploadReceipt
+  uploadReceipt
 }; 

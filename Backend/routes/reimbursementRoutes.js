@@ -52,7 +52,7 @@ router.get('/summary', protect, restrict('employee', 'manager'), getReimbursemen
 router.get('/history', protect, getReimbursementHistory);
 router.get('/:id', protect, getReimbursementById);
 router.delete('/:id', protect, restrict('employee', 'manager'), cancelReimbursement);
-// router.post('/upload', protect, restrict('employee', 'manager'), upload.single('receipt'), uploadReceipt);
+router.post('/upload', protect, restrict('employee', 'manager'), upload.single('receipt'), uploadReceipt);
 
 // Manager routes
 router.get('/manager/pending', protect, restrict('manager'), getManagerPendingReimbursements);
