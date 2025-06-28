@@ -8,7 +8,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "seed:employees": "node ./seeders/employeeSeeder.js",
     "seed:managers": "node ./seeders/managerSeeder.js",
-    "seed:all": "node ./seeders/employeeSeeder.js && node ./seeders/managerSeeder.js"
+    "seed:all": "node ./seeders/employeeSeeder.js && node ./seeders/managerSeeder.js",
+    "dev": "nodemon server.js",
+    "build": "echo 'No build step required'"
   },
   "keywords": [],
   "author": "",
