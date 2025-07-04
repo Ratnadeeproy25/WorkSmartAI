@@ -18,7 +18,16 @@ const multer = require('multer');
 const path = require('path');
 
 // Configure multer storage
-const storage = multer.memoryStorage(); // Use memory storage for serverless
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/receipts');
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    cb(null, file.fieldname + '-' + uniqueSuffix + ext);
+  }
+});
 
 // File filter for receipt uploads
 const fileFilter = (req, file, cb) => {
@@ -37,14 +46,7 @@ const upload = multer({
 });
 
 // Employee and Manager routes - both can submit requests
-// Make receipts optional by using multer middleware conditionally
-router.post('/request', protect, restrict('employee', 'manager'), (req, res, next) => {
-  // Only apply multer if files are being uploaded
-  if (req.headers['content-type'] && req.headers['content-type'].includes('multipart/form-data')) {
-    return upload.array('receipts', 5)(req, res, next);
-  }
-  next();
-}, requestReimbursement);
+router.post('/request', protect, restrict('employee', 'manager'), upload.array('receipts', 5), requestReimbursement);
 router.get('/', protect, getReimbursementRequests);
 router.get('/summary', protect, restrict('employee', 'manager'), getReimbursementSummary);
 router.get('/history', protect, getReimbursementHistory);
@@ -60,4 +62,4 @@ router.put('/:id/manager-action', protect, restrict('manager'), managerReimburse
 router.get('/admin/pending', protect, restrict('admin'), getAdminPendingReimbursements);
 router.put('/:id/admin-action', protect, restrict('admin'), adminReimbursementAction);
 
-module.exports = router;
+module.exports = router; 

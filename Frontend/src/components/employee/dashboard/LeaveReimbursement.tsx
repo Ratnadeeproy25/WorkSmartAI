@@ -191,7 +191,7 @@ const LeaveReimbursement: React.FC = () => {
                     <div>
                       <div className="font-medium text-gray-700">{request.type}</div>
                       <div className="text-sm text-gray-600">{request.description}</div>
-                      <div className="text-xs text-gray-500 mt-1">₹{request.amount.toFixed(2)}</div>
+                      <div className="text-xs text-gray-500 mt-1">${request.amount.toFixed(2)}</div>
                     </div>
                   </div>
                   <span className={`px-3 py-1 rounded-full text-sm ${
@@ -215,7 +215,7 @@ const LeaveReimbursement: React.FC = () => {
               {loading ? (
                 <div className="h-7 bg-gray-300 rounded w-24"></div>
               ) : (
-                `₹${reimbursementData.summary.pending.amount.toFixed(2)}`
+                `$${reimbursementData.summary.pending.amount.toFixed(2)}`
               )}
             </div>
             <div className="text-xs text-gray-500">
@@ -232,7 +232,7 @@ const LeaveReimbursement: React.FC = () => {
               {loading ? (
                 <div className="h-7 bg-gray-300 rounded w-24"></div>
               ) : (
-                `₹${reimbursementData.summary.approved.amount.toFixed(2)}`
+                `$${reimbursementData.summary.approved.amount.toFixed(2)}`
               )}
             </div>
             <div className="text-xs text-gray-500">Last 30 days</div>
@@ -250,4 +250,4 @@ const LeaveReimbursement: React.FC = () => {
   );
 };
 
-export default LeaveReimbursement;
+export default LeaveReimbursement; 

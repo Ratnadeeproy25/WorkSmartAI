@@ -18,9 +18,9 @@ const ReimbursementHistory: React.FC<ReimbursementHistoryProps> = ({ reimburseme
 
   // Helper function to format currency
   const formatCurrency = (amount: number): string => {
-    return new Intl.NumberFormat('en-IN', {
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'INR'
+      currency: 'USD'
     }).format(amount);
   };
 
@@ -82,4 +82,4 @@ const ReimbursementHistory: React.FC<ReimbursementHistoryProps> = ({ reimburseme
   );
 };
 
-export default ReimbursementHistory;
+export default ReimbursementHistory; 

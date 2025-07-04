@@ -107,14 +107,12 @@ export const submitReimbursementRequest = async (
   formData: FormData
 ): Promise<ReimbursementRequest> => {
   try {
-    // Ensure we're not setting Content-Type manually as the browser needs to set the boundary
     const response = await api.post<ApiResponse<ApiReimbursementRequest>>(
       `${BASE_URL}/request`,
       formData,
       {
         headers: {
-          // Let the browser set the correct Content-Type with boundary
-          'Content-Type': undefined,
+          'Content-Type': 'multipart/form-data',
         },
       }
     );
@@ -152,3 +150,26 @@ export const cancelReimbursementRequest = async (id: string): Promise<void> => {
     throw error;
   }
 };
+
+// Upload a receipt
+export const uploadReceipt = async (file: File): Promise<ReceiptInfo> => {
+  try {
+    const formData = new FormData();
+    formData.append('receipt', file);
+    
+    const response = await api.post<ApiResponse<ReceiptInfo>>(
+      `${BASE_URL}/upload`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+    
+    return response.data.data;
+  } catch (error) {
+    console.error('Error uploading receipt:', error);
+    throw error;
+  }
+}; 

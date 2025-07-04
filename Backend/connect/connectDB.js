@@ -2,13 +2,8 @@ const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 dotenv.config();
 
-// Require MONGO_URI for production, with a local fallback for development
-const URI = process.env.MONGO_URI || (process.env.NODE_ENV === 'production' ? null : "mongodb://localhost:27017/worksmartAI");
-
-if (!URI) {
-  console.error("MONGO_URI environment variable is required for production deployment");
-  process.exit(1);
-}
+// Default to worksmartAI database if MONGO_URI is not set
+const URI = process.env.MONGO_URI || "mongodb+srv://mrroy251998:Password@cluster0.szumu18.mongodb.net/";
 
 exports.connectDB = async () => {
   try {
