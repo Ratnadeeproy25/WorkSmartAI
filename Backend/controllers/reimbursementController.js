@@ -30,7 +30,7 @@ const requestReimbursement = asyncHandler(async (req, res) => {
     });
   }
 
-  // Process uploaded receipts
+  // Process uploaded receipts (optional)
   const receipts = [];
   
   if (req.files && req.files.length > 0) {
@@ -42,11 +42,6 @@ const requestReimbursement = asyncHandler(async (req, res) => {
         type: file.mimetype
       });
     }
-  } else {
-    return res.status(400).json({
-      success: false,
-      message: 'At least one receipt is required',
-    });
   }
 
   // Determine approval flow based on user role
