@@ -152,9 +152,9 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                 onChange={(e) => setAmount(e.target.value)}
               >
                 <option value="">Any Amount</option>
-                <option value="0-100">$0 - $100</option>
-                <option value="100-500">$100 - $500</option>
-                <option value="500+">$500+</option>
+                <option value="0-100">₹0 - ₹100</option>
+                <option value="100-500">₹100 - ₹500</option>
+                <option value="500+">₹500+</option>
               </select>
             </div>
           </>
@@ -174,4 +174,4 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   );
 };
 
-export default FilterPanel; 
+export default FilterPanel;

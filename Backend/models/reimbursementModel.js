@@ -79,7 +79,10 @@ const reimbursementSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    receipts: [receiptSchema],
+    receipts: {  
+      type: [receiptSchema],
+      default: []
+    },
     status: {
       type: String,
       enum: ['pending', 'manager-approved', 'approved', 'rejected'],
@@ -162,4 +165,4 @@ reimbursementSchema.plugin(mongoosePaginate);
 
 const Reimbursement = mongoose.model('Reimbursement', reimbursementSchema);
 
-module.exports = Reimbursement; 
+module.exports = Reimbursement;

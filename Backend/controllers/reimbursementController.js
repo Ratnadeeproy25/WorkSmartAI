@@ -30,9 +30,10 @@ const requestReimbursement = asyncHandler(async (req, res) => {
     });
   }
 
-  // Process uploaded receipts
+  // Initialize empty receipts array (receipts are optional)
   const receipts = [];
   
+  // Process uploaded receipts if any
   if (req.files && req.files.length > 0) {
     for (const file of req.files) {
       receipts.push({
@@ -42,11 +43,6 @@ const requestReimbursement = asyncHandler(async (req, res) => {
         type: file.mimetype
       });
     }
-  } else {
-    return res.status(400).json({
-      success: false,
-      message: 'At least one receipt is required',
-    });
   }
 
   // Determine approval flow based on user role
@@ -574,4 +570,4 @@ module.exports = {
   getReimbursementSummary,
   getReimbursementHistory,
   uploadReceipt
-}; 
+};

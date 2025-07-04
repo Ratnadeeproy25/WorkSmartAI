@@ -124,29 +124,22 @@ const LeaveReimbursementPage: React.FC = () => {
 
   // Memoize reimbursement request submission handler
   const handleReimbursementRequestSubmit = useCallback(async (
-    reimbursementRequest: Omit<ReimbursementRequest, 'id' | 'createdAt' | 'status'> & { receipt: File[] }
+    reimbursementRequest: Omit<ReimbursementRequest, 'id' | 'createdAt' | 'status'>
   ) => {
     try {
-      const { receipt, ...rest } = reimbursementRequest;
-      
-      // Create form data for multipart/form-data submission
+      // Create form data for submission
       const formData = new FormData();
-      formData.append('type', rest.type);
-      formData.append('amount', rest.amount.toString());
-      formData.append('date', rest.date);
-      formData.append('description', rest.description);
-      
-      // Append each receipt file
-      Array.from(receipt).forEach(file => {
-        formData.append('receipts', file);
-      });
+      formData.append('type', reimbursementRequest.type);
+      formData.append('amount', reimbursementRequest.amount.toString());
+      formData.append('date', reimbursementRequest.date);
+      formData.append('description', reimbursementRequest.description);
       
       // Submit the request
       await reimbursementService.submitReimbursementRequest(formData);
       
       // Refresh reimbursement data
-      fetchReimbursementRequests();
-      fetchReimbursementSummary();
+      await fetchReimbursementRequests();
+      await fetchReimbursementSummary();
       
       // Show success notification
       showNotification('Reimbursement request submitted successfully', 'success');
@@ -286,4 +279,4 @@ const LeaveReimbursementPage: React.FC = () => {
   );
 };
 
-export default LeaveReimbursementPage; 
+export default LeaveReimbursementPage;

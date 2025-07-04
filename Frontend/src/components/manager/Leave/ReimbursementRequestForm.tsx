@@ -13,7 +13,6 @@ const ReimbursementRequestForm: React.FC<ReimbursementRequestFormProps> = ({ onS
     description: '',
     justification: '',
   });
-  const [receipts, setReceipts] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -25,20 +24,7 @@ const ReimbursementRequestForm: React.FC<ReimbursementRequestFormProps> = ({ onS
     if (formError) setFormError(null);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      // Convert FileList to array and append to existing files
-      const newFiles = Array.from(e.target.files);
-      setReceipts(prev => [...prev, ...newFiles]);
-    }
-    
-    // Reset the input field so the same file can be selected again if needed
-    e.target.value = '';
-  };
 
-  const removeReceipt = (index: number) => {
-    setReceipts(prev => prev.filter((_, i) => i !== index));
-  };
 
   const validateForm = (): boolean => {
     // Check all required fields
@@ -50,12 +36,6 @@ const ReimbursementRequestForm: React.FC<ReimbursementRequestFormProps> = ({ onS
     // Validate amount
     if (parseFloat(formData.amount) <= 0) {
       setFormError('Amount must be greater than zero');
-      return false;
-    }
-
-    // Validate receipt
-    if (receipts.length === 0) {
-      setFormError('Please upload at least one receipt');
       return false;
     }
 
@@ -80,11 +60,6 @@ const ReimbursementRequestForm: React.FC<ReimbursementRequestFormProps> = ({ onS
       submitData.append('description', 
         formData.description + (formData.justification ? `\n\nBusiness Justification: ${formData.justification}` : ''));
       
-      // Append each receipt file
-      receipts.forEach(file => {
-        submitData.append('receipts', file);
-      });
-      
       await onSubmit(submitData);
       
       // Reset form on successful submission
@@ -95,7 +70,6 @@ const ReimbursementRequestForm: React.FC<ReimbursementRequestFormProps> = ({ onS
         description: '',
         justification: ''
       });
-      setReceipts([]);
       
       // Show success message
       alert('Reimbursement request submitted successfully! Awaiting approval.');
@@ -109,12 +83,7 @@ const ReimbursementRequestForm: React.FC<ReimbursementRequestFormProps> = ({ onS
     }
   };
 
-  // Format file size display
-  const formatFileSize = (bytes: number): string => {
-    if (bytes < 1024) return bytes + ' bytes';
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-  };
+
 
   return (
     <div className="neo-box p-8">
@@ -206,50 +175,7 @@ const ReimbursementRequestForm: React.FC<ReimbursementRequestFormProps> = ({ onS
             disabled={isSubmitting}
           ></textarea>
         </div>
-        <div>
-          <label className="block text-gray-700 mb-2">Receipts</label>
-          <div className="neo-box p-4">
-            <input 
-              type="file" 
-              id="receiptUpload" 
-              className="hidden"
-              onChange={handleFileChange}
-              accept=".jpg,.jpeg,.png,.pdf"
-              multiple
-              disabled={isSubmitting}
-            />
-            <label htmlFor="receiptUpload" className="neo-button p-3 inline-flex items-center gap-2 cursor-pointer">
-              <i className="bi bi-upload"></i>
-              <span>Upload Receipt</span>
-            </label>
-            <p className="text-sm text-gray-500 mt-2">
-              Supported formats: JPG, PNG, PDF
-            </p>
-            
-            {/* Display uploaded files */}
-            {receipts.length > 0 && (
-              <div className="mt-4 space-y-2">
-                <h4 className="font-medium">Uploaded Receipts:</h4>
-                {receipts.map((file, idx) => (
-                  <div key={idx} className="flex justify-between items-center p-2 bg-gray-100 rounded">
-                    <div className="flex items-center">
-                      <i className="bi bi-file-earmark mr-2"></i>
-                      <span className="text-sm">{file.name} ({formatFileSize(file.size)})</span>
-                    </div>
-                    <button 
-                      type="button" 
-                      className="text-red-500 hover:text-red-700"
-                      onClick={() => removeReceipt(idx)}
-                      disabled={isSubmitting}
-                    >
-                      <i className="bi bi-x-circle"></i>
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+
         <div className="flex justify-end">
           <button 
             type="submit" 
@@ -274,4 +200,4 @@ const ReimbursementRequestForm: React.FC<ReimbursementRequestFormProps> = ({ onS
   );
 };
 
-export default ReimbursementRequestForm; 
+export default ReimbursementRequestForm;

@@ -46,7 +46,14 @@ const upload = multer({
 });
 
 // Employee and Manager routes - both can submit requests
-router.post('/request', protect, restrict('employee', 'manager'), upload.array('receipts', 5), requestReimbursement);
+// Make receipts optional by using multer middleware conditionally
+router.post('/request', protect, restrict('employee', 'manager'), (req, res, next) => {
+  // Only apply multer if files are being uploaded
+  if (req.headers['content-type'] && req.headers['content-type'].includes('multipart/form-data')) {
+    return upload.array('receipts', 5)(req, res, next);
+  }
+  next();
+}, requestReimbursement);
 router.get('/', protect, getReimbursementRequests);
 router.get('/summary', protect, restrict('employee', 'manager'), getReimbursementSummary);
 router.get('/history', protect, getReimbursementHistory);
@@ -62,4 +69,4 @@ router.put('/:id/manager-action', protect, restrict('manager'), managerReimburse
 router.get('/admin/pending', protect, restrict('admin'), getAdminPendingReimbursements);
 router.put('/:id/admin-action', protect, restrict('admin'), adminReimbursementAction);
 
-module.exports = router; 
+module.exports = router;
