@@ -180,17 +180,14 @@ const initializeAI = async () => {
 const startServer = async () => {
   try {
     const connected = await connectDB();
-    
     if (!connected) {
       console.error("Failed to connect to MongoDB. Please check your connection settings.");
       console.error("Make sure MongoDB is running and the MONGO_URI is correct.");
       console.error("You can create a .env file with: PORT=5000 and MONGO_URI=mongodb://127.0.0.1:27017/worksmartAI");
       process.exit(1);
     }
-    
     // Initialize AI services after database connection
     await initializeAI();
-    
     app.listen(PORT, () => {
       console.log(`🚀 Server is running at port: ${PORT}`);
       console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
@@ -208,4 +205,10 @@ const startServer = async () => {
   }
 };
 
-startServer();
+// Only start the server if running locally
+if (require.main === module) {
+  startServer();
+}
+
+// Export the app for Vercel serverless deployment
+module.exports = app;
