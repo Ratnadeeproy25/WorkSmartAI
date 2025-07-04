@@ -35,7 +35,7 @@ const ReimbursementHistory: React.FC<ReimbursementHistoryProps> = ({ reimburseme
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
-                  <div className="text-sm font-medium">${request.amount.toFixed(2)}</div>
+                  <div className="text-sm font-medium">₹{request.amount.toFixed(2)}</div>
                   <span className={`status-badge ${request.status}`}>
                     {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
                   </span>

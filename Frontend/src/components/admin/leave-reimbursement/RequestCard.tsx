@@ -174,7 +174,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
           <div className="text-sm text-gray-600">{request.expenseType} - {request.date}</div>
         </div>
         <div className="flex items-center gap-4">
-          <div className="text-sm font-medium">${request.amount.toFixed(2)}</div>
+          <div className="text-sm font-medium">₹{request.amount.toFixed(2)}</div>
           <div className="text-right">
           <span className={statusClasses[request.status]}>
               {statusLabels[request.status]}

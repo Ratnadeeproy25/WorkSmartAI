@@ -12,15 +12,15 @@ const ReimbursementSummary: React.FC<ReimbursementSummaryProps> = ({ summary }) 
       <div className="space-y-6">
         <div className="grid grid-cols-3 gap-4">
           <div className="text-center">
-            <div className="text-lg font-bold text-blue-600">{summary.totalSubmitted}</div>
+            <div className="text-2xl font-bold text-blue-600">₹{summary.totalSubmitted.toFixed(2)}</div>
             <div className="text-sm text-gray-600">Total Submitted</div>
           </div>
           <div className="text-center">
-            <div className="text-lg font-bold text-green-600">{summary.totalApproved}</div>
+            <div className="text-2xl font-bold text-green-600">₹{summary.totalApproved.toFixed(2)}</div>
             <div className="text-sm text-gray-600">Approved</div>
           </div>
           <div className="text-center">
-            <div className="text-lg font-bold text-orange-600">{summary.totalPending}</div>
+            <div className="text-2xl font-bold text-yellow-600">₹{summary.totalPending.toFixed(2)}</div>
             <div className="text-sm text-gray-600">Pending</div>
           </div>
         </div>

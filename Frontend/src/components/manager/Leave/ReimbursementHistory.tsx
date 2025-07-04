@@ -58,9 +58,7 @@ const ReimbursementHistory: React.FC<ReimbursementHistoryProps> = ({ reimburseme
                   <span className={`status-badge ${request.status}`}>
                     {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
                   </span>
-                  <span className="text-lg font-semibold mt-1">
-                    {formatCurrency(request.amount)}
-                  </span>
+                  <span className="text-lg font-semibold mt-1">₹{request.amount.toFixed(2)}</span>
                 </div>
               </div>
               <div className="mt-4 text-sm text-gray-600">
