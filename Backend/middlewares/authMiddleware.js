@@ -6,7 +6,12 @@ const Admin = require('../models/adminModel');
 const mongoose = require('mongoose');
 
 // Use environment variable with fallback - use a strong secret in production
-const JWT_SECRET = process.env.JWT_SECRET || 'worksmartAI_super_secure_secret_key_2024_change_in_production';
+const JWT_SECRET = process.env.JWT_SECRET || (process.env.NODE_ENV === 'production' ? null : 'worksmartAI_super_secure_secret_key_2024_change_in_production');
+
+if (!JWT_SECRET) {
+  console.error("JWT_SECRET environment variable is required for production deployment");
+  process.exit(1);
+}
 
 // Find a manager by ID in either Manager or Employee collections
 const findManagerById = async (id) => {

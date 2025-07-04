@@ -54,11 +54,4 @@ const errorHandler = (err, req, res, next) => {
   });
 };
 
-module.exports = (err, req, res, next) => {
-  console.error(err.stack || err); // Log full error
-  res.status(err.status || 500).json({
-    success: false,
-    message: err.message || 'Internal Server Error',
-    error: process.env.NODE_ENV === 'production' ? undefined : err.stack,
-  });
-}; 
+module.exports = errorHandler; 

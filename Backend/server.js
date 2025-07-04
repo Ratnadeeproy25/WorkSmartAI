@@ -87,7 +87,29 @@ app.use('/api', rateLimit(1000, 15 * 60 * 1000)); // 1000 requests per 15 minute
 app.use(express.json({ limit: '2mb' }));  // Reduced payload limit for security
 app.use(
   cors({
-    origin: true, // allow all origins for debugging
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+      
+      // Define allowed origins
+      const allowedOrigins = [
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+        'http://localhost:3001',
+        'http://127.0.0.1:3001'
+      ];
+      
+      // In production, use environment variable
+      if (process.env.NODE_ENV === 'production' && process.env.FRONTEND_URL) {
+        allowedOrigins.push(process.env.FRONTEND_URL);
+      }
+      
+      if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'role'],
@@ -158,14 +180,17 @@ const initializeAI = async () => {
 const startServer = async () => {
   try {
     const connected = await connectDB();
+    
     if (!connected) {
       console.error("Failed to connect to MongoDB. Please check your connection settings.");
       console.error("Make sure MongoDB is running and the MONGO_URI is correct.");
       console.error("You can create a .env file with: PORT=5000 and MONGO_URI=mongodb://127.0.0.1:27017/worksmartAI");
       process.exit(1);
     }
+    
     // Initialize AI services after database connection
     await initializeAI();
+    
     app.listen(PORT, () => {
       console.log(`🚀 Server is running at port: ${PORT}`);
       console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
@@ -183,10 +208,4 @@ const startServer = async () => {
   }
 };
 
-// Only start the server if running locally
-if (require.main === module) {
-  startServer();
-}
-
-// Export the app for Vercel serverless deployment
-module.exports = app;
+startServer();
