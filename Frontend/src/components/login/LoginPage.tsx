@@ -183,6 +183,10 @@ const LoginPage: React.FC = () => {
           )}
         </div>
       </div>
+      {/* Add demo login email at the bottom */}
+      <div style={{ position: 'fixed', bottom: 12, left: 0, width: '100%', textAlign: 'center', zIndex: 50 }}>
+        <span style={{ color: '#6b7280', fontSize: '0.95rem' }}>Demo login email: <b>r@work.com</b></span>
+      </div>
     </>
   );
 };

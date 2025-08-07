@@ -19,3 +19,4 @@ services:
         value: true
       - key: ML_PREDICTION_ENABLED
         value: true
+
