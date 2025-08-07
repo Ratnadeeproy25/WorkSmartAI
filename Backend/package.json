@@ -1,23 +1,19 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "WorkSmartAI Backend API",
+  "description": "",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon ./server.js",
+    "start": "nodemon ./server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "seed:employees": "node ./seeders/employeeSeeder.js",
     "seed:managers": "node ./seeders/managerSeeder.js",
     "seed:all": "node ./seeders/employeeSeeder.js && node ./seeders/managerSeeder.js"
   },
-  "keywords": ["api", "backend", "worksmart", "ai"],
+  "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
-  "engines": {
-    "node": ">=18.0.0"
-  },
   "dependencies": {
     "axios": "^1.9.0",
     "bcryptjs": "^3.0.2",
