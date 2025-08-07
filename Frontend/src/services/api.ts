@@ -47,7 +47,7 @@ const requestQueue = new RequestQueue();
 
 // Create an axios instance with base URL and default headers
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api',
+  baseURL: process.env.REACT_APP_API_URL || 'https://worksmart-ai-backend.onrender.com/api',
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',

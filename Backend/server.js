@@ -97,7 +97,9 @@ app.use(
         'http://localhost:3000',
         'http://127.0.0.1:3000',
         'http://localhost:3001',
-        'http://127.0.0.1:3001'
+        'http://127.0.0.1:3001',
+        'https://worksmart-ai.vercel.app',
+        'https://worksmart-ai.vercel.app/'
       ];
       
       // In production, use environment variable
@@ -126,6 +128,16 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Routes
 app.get("/", (req, resp) => {
   resp.send("Employee Management API with AI-Powered Task Scheduling is running");
+});
+
+// Health check endpoint for Render
+app.get("/health", (req, resp) => {
+  resp.status(200).json({
+    status: "OK",
+    message: "WorkSmartAI Backend is running",
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
 });
 
 // Mount API routes
